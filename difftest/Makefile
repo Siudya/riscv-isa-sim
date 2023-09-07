@@ -11,7 +11,7 @@ REPO_MAKEFILE = $(REPO_BUILD_PATH)/Makefile
 NUM_CORES  ?= 1
 
 CONFIGURE_FLAGS =         \
-	-q --enable-dirty     \
+	-q                    \
 	--with-boost=no       \
 	--with-boost-asio=no  \
 	--with-boost-regex=no
@@ -25,7 +25,6 @@ SRCS += $(REPO_PATH)/spike_main/spike.cc
 CXXFLAGS = -O3 --std=c++17 -shared -fPIC -DNUM_CORES=$(NUM_CORES)
 
 ifneq ($(DEBUG),)
-CONFIGURE_FLAGS += --enable-commitlog
 CXXFLAGS += -DDIFFTEST_LOG_FILE=\"$(NOOP_HOME)/build/spike.log\"
 endif
 

@@ -110,10 +110,11 @@ void clint_t::tick(reg_t rtc_ticks)
     mtime += rtc_ticks;
   }
 
-  for (const auto& [hart_id, hart] : sim->get_harts()) {
-    hart->state.time->sync(mtime);
-    hart->state.mip->backdoor_write_with_mask(MIP_MTIP, mtime >= mtimecmp[hart_id] ? MIP_MTIP : 0);
-  }
+  // difftest: disable clint timer
+  // for (const auto& [hart_id, hart] : sim->get_harts()) {
+  //   hart->state.time->sync(mtime);
+  //   hart->state.mip->backdoor_write_with_mask(MIP_MTIP, mtime >= mtimecmp[hart_id] ? MIP_MTIP : 0);
+  // }
 }
 
 clint_t* clint_parse_from_fdt(const void* fdt, const sim_t* sim, reg_t* base) {

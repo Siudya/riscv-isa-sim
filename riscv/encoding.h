@@ -287,7 +287,7 @@
 #define PMP_X     0x04
 #define PMP_A     0x18
 #define PMP_L     0x80
-#define PMP_SHIFT 2
+#define PMP_SHIFT 8
 
 #define PMP_TOR   0x08
 #define PMP_NA4   0x10

@@ -49,9 +49,10 @@ htif_t::htif_t()
     tohost_addr(0), fromhost_addr(0), exitcode(0), stopped(false),
     syscall_proxy(this)
 {
-  signal(SIGINT, &handle_signal);
-  signal(SIGTERM, &handle_signal);
-  signal(SIGABRT, &handle_signal); // we still want to call static destructors
+  // Need to figure out why to disable the following statements to fit into difftest
+  // signal(SIGINT, &handle_signal);
+  // signal(SIGTERM, &handle_signal);
+  // signal(SIGABRT, &handle_signal); // we still want to call static destructors
 }
 
 htif_t::htif_t(int argc, char** argv) : htif_t()
@@ -353,7 +354,7 @@ void htif_t::parse_arguments(int argc, char ** argv)
           break;
         throw std::invalid_argument("Unknown argument (did you mean to enable +permissive parsing?)");
       case 1: {
-        std::string arg = optarg;
+        std::string arg = optarg ? optarg : ""; // Need to figure out the reason of this change for difftest
         if (arg == "+h" || arg == "+help") {
           c = 'h';
           optarg = nullptr;

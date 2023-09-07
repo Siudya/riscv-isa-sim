@@ -22,7 +22,8 @@
 #include <sstream>
 #include "../VERSION"
 
-static void help(int exit_code = 1)
+namespace spike_main {
+void help(int exit_code = 1)
 {
   fprintf(stderr, "Spike RISC-V ISA Simulator " SPIKE_VERSION "\n\n");
   fprintf(stderr, "usage: spike [host options] <target program> [target options]\n");
@@ -88,25 +89,25 @@ static void help(int exit_code = 1)
   exit(exit_code);
 }
 
-static void suggest_help()
+void suggest_help()
 {
   fprintf(stderr, "Try 'spike --help' for more information.\n");
   exit(1);
 }
 
-static bool check_file_exists(const char *fileName)
+bool check_file_exists(const char *fileName)
 {
   std::ifstream infile(fileName);
   return infile.good();
 }
 
-static std::ifstream::pos_type get_file_size(const char *filename)
+std::ifstream::pos_type get_file_size(const char *filename)
 {
   std::ifstream in(filename, std::ios::ate | std::ios::binary);
   return in.tellg();
 }
 
-static void read_file_bytes(const char *filename,size_t fileoff,
+void read_file_bytes(const char *filename,size_t fileoff,
                             abstract_mem_t* mem, size_t memoff, size_t read_sz)
 {
   std::ifstream in(filename, std::ios::in | std::ios::binary);
@@ -125,12 +126,12 @@ bool sort_mem_region(const mem_cfg_t &a, const mem_cfg_t &b)
     return (a.get_base() < b.get_base());
 }
 
-static bool check_mem_overlap(const mem_cfg_t& L, const mem_cfg_t& R)
+bool check_mem_overlap(const mem_cfg_t& L, const mem_cfg_t& R)
 {
   return std::max(L.get_base(), R.get_base()) <= std::min(L.get_inclusive_end(), R.get_inclusive_end());
 }
 
-static bool check_if_merge_covers_64bit_space(const mem_cfg_t& L,
+bool check_if_merge_covers_64bit_space(const mem_cfg_t& L,
                                               const mem_cfg_t& R)
 {
   if (!check_mem_overlap(L, R))
@@ -142,7 +143,7 @@ static bool check_if_merge_covers_64bit_space(const mem_cfg_t& L,
   return (start == 0ull) && (end == std::numeric_limits<uint64_t>::max());
 }
 
-static mem_cfg_t merge_mem_regions(const mem_cfg_t& L, const mem_cfg_t& R)
+mem_cfg_t merge_mem_regions(const mem_cfg_t& L, const mem_cfg_t& R)
 {
   // one can merge only intersecting regions
   assert(check_mem_overlap(L, R));
@@ -156,7 +157,7 @@ static mem_cfg_t merge_mem_regions(const mem_cfg_t& L, const mem_cfg_t& R)
 
 // check the user specified memory regions and merge the overlapping or
 // eliminate the containing parts
-static std::vector<mem_cfg_t>
+std::vector<mem_cfg_t>
 merge_overlapping_memory_regions(std::vector<mem_cfg_t> mems)
 {
   if (mems.empty())
@@ -191,7 +192,7 @@ merge_overlapping_memory_regions(std::vector<mem_cfg_t> mems)
   return merged_mem;
 }
 
-static std::vector<mem_cfg_t> parse_mem_layout(const char* arg)
+std::vector<mem_cfg_t> parse_mem_layout(const char* arg)
 {
   std::vector<mem_cfg_t> res;
 
@@ -263,7 +264,7 @@ static std::vector<mem_cfg_t> parse_mem_layout(const char* arg)
   return merged_mem;
 }
 
-static std::vector<std::pair<reg_t, abstract_mem_t*>> make_mems(const std::vector<mem_cfg_t> &layout)
+std::vector<std::pair<reg_t, abstract_mem_t*>> make_mems(const std::vector<mem_cfg_t> &layout)
 {
   std::vector<std::pair<reg_t, abstract_mem_t*>> mems;
   mems.reserve(layout.size());
@@ -273,7 +274,7 @@ static std::vector<std::pair<reg_t, abstract_mem_t*>> make_mems(const std::vecto
   return mems;
 }
 
-static unsigned long atoul_safe(const char* s)
+unsigned long atoul_safe(const char* s)
 {
   char* e;
   auto res = strtoul(s, &e, 10);
@@ -282,7 +283,7 @@ static unsigned long atoul_safe(const char* s)
   return res;
 }
 
-static unsigned long atoul_nonzero_safe(const char* s)
+unsigned long atoul_nonzero_safe(const char* s)
 {
   auto res = atoul_safe(s);
   if (!res)
@@ -290,7 +291,7 @@ static unsigned long atoul_nonzero_safe(const char* s)
   return res;
 }
 
-static std::vector<size_t> parse_hartids(const char *s)
+std::vector<size_t> parse_hartids(const char *s)
 {
   std::string const str(s);
   std::stringstream stream(str);
@@ -322,6 +323,9 @@ static std::vector<size_t> parse_hartids(const char *s)
 
   return hartids;
 }
+}
+
+using namespace spike_main;
 
 int main(int argc, char** argv)
 {

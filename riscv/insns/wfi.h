@@ -10,4 +10,4 @@ if (STATE.v && STATE.prv == PRV_U) {
   // U-mode causes an illegal instruction exception.
   require_privilege(PRV_S);
 }
-wfi();
+// wfi();

@@ -21,6 +21,8 @@ class mmu_t;
 class remote_bitbang_t;
 class socketif_t;
 
+class difftest_t;
+
 // this class encapsulates the processors and memory in a RISC-V machine.
 class sim_t : public htif_t, public simif_t
 {
@@ -151,6 +153,8 @@ public:
   // enumerate processors, which segfaults if procs hasn't been initialized
   // yet.
   debug_module_t debug_module;
+
+  friend class difftest_t;
 };
 
 extern volatile bool ctrlc_pressed;

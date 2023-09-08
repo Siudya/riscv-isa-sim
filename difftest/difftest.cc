@@ -26,6 +26,10 @@
 #include "../riscv/decode.h"
 #include "../riscv/disasm.h"
 
+#ifdef CONFIG_USE_SPARSEMM
+#include "sparseram.h"
+#endif
+
 static std::unique_ptr<difftest_t> diff = std::make_unique<difftest_t>();
 
 void difftest_t::diff_step(size_t p, uint64_t n) {
@@ -105,10 +109,45 @@ void difftest_t::diff_set_regs(size_t p, void* diff_context) {
 }
 
 void difftest_t::diff_memcpy(size_t p, reg_t dest, void* src, size_t n) {
+  #ifdef CONFIG_USE_SPARSEMM
+  printf("[sp-ram] start sync RAM from dut, please wait ...\n");
+  float dsize = 0;
+  SparseRam *sp_mem = (SparseRam *)src;
+  auto fc = [&](paddr_t addr, size_t len, void* buff){
+    reg_t mem_start;
+    dsize += len;
+    auto desc = this->sim->bus.find_device(addr);
+    auto mem = dynamic_cast<mem_t*>(desc.second);
+    if (mem == NULL){
+      mem = new mem_t(len);
+      mem_start = addr;
+      this->sim->bus.add_device(mem_start, mem);
+    }else{
+      mem_start = desc.first;
+    }
+    assert(addr >= mem_start);
+    auto mem_write_addr = addr - mem_start;
+    int64_t mem_remain_size = mem->size() - mem_write_addr;
+    if (mem_remain_size >= len){
+      mem->store(mem_write_addr, len, (const uint8_t* )buff);
+      return;
+    }
+    mem->store(mem_write_addr, mem_remain_size, (const uint8_t* )buff);
+    // need add new mem
+    auto n_size = - mem_remain_size;
+    auto new_mem = new mem_t(n_size);
+    this->sim->bus.add_device(mem_start + mem->size(), new_mem);
+    new_mem->store(0, n_size, (const uint8_t* )((reg_t)buff + mem_remain_size));
+  };
+
+  sp_mem->copy_bytes(fc);
+  printf("[sp-ram] copy data (%.2f kB) from dut complete\n", dsize/1024.0);
+  #else
   mmu_t* mmu = sim->get_core(p)->get_mmu();
   for (size_t i = 0; i < n; i++) {
     mmu->store(dest+i, *((uint8_t*)src+i));
   }
+  #endif
 }
 
 void difftest_t::diff_debugmode(size_t p){

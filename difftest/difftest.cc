@@ -268,6 +268,10 @@ void difftest_init() {
 
   // In case it is used for tracing multi-core, choose no buffering mode
   setvbuf(diff->sim->get_core(0)->get_log_file(), NULL, _IONBF, 0);
+
+  for(auto const& pair : diff->sim->get_harts()) {
+    pair.second->set_pmp_granularity(1UL << 12);  // 4KB PMP granularity
+  }
 }
 
 void difftest_memcpy(size_t p, paddr_t addr, void *buf, size_t n, bool direction) {

@@ -220,7 +220,7 @@ void difftest_init() {
   cfg_t cfg(/*default_initrd_bounds=*/std::make_pair((reg_t)0, (reg_t)0),
             /*default_bootargs=*/nullptr,
             /*default_isa=*/
-            "RV64IMAFDCV_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_"
+            "RV64IMAFDC_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_"
             "zksh_svinval",
             /*default_priv=*/"MSU",
             /*default_varch=*/"vlen:128,elen:64",
@@ -268,6 +268,10 @@ void difftest_init() {
 
   // In case it is used for tracing multi-core, choose no buffering mode
   setvbuf(diff->sim->get_core(0)->get_log_file(), NULL, _IONBF, 0);
+
+  for(auto const& pair : diff->sim->get_harts()) {
+    pair.second->set_pmp_granularity(1UL << 12);  // 4KB PMP granularity
+  }
 }
 
 void difftest_memcpy(size_t p, paddr_t addr, void *buf, size_t n, bool direction) {
@@ -291,7 +295,20 @@ void difftest_csrcpy(size_t p, void *dut, bool direction) {
 }
 
 void difftest_uarchstatus_cpy(size_t p, void *dut, bool direction) {
-  // TODO
+  // set LR-SC status
+  if (direction == DIFFTEST_TO_REF) {
+    struct sync_state_t* ms = (struct sync_state_t*)dut;
+    // XS core does not give address information
+    // If DUT lrsc is valid, we just assume REF MMU has the same address
+    // If DUT lrsc is invalid, we clear the reservation
+    if (!ms->lrscValid)
+      diff->sim->get_core(p)->get_mmu()->yield_load_reservation();
+  } else {
+    // This is not used in normal difftest, not tested for now
+    struct sync_state_t ms;
+    ms.lrscAddr = diff->sim->get_core(p)->get_mmu()->get_load_reservation_address();
+    ms.lrscValid = (ms.lrscAddr == (reg_t)-1) ? 0 : 1;
+  }
 }
 
 void update_dynamic_config(size_t p, void* config) {

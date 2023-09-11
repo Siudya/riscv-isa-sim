@@ -1,6 +1,7 @@
 // See LICENSE for license details.
 
 #include "arith.h"
+#include "decode.h"
 #include "processor.h"
 #include "extension.h"
 #include "common.h"
@@ -925,8 +926,12 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     const bool nmie = !(state.mnstatus && !get_field(state.mnstatus->read(), MNSTATUS_NMIE));
     state.pc = !nmie ? rnmi_trap_handler_address : trap_handler_address;
     state.mepc->write(epc);
+    // Align with XS core, set mtval to 0 rather than the faulting instruction bits
     state.mcause->write(t.cause());
-    state.mtval->write(t.get_tval());
+    if(t.cause() != 2)
+      state.mtval->write(t.get_tval());
+    else
+      state.mtval->write(reg_t(0));
     state.mtval2->write(t.get_tval2());
     state.mtinst->write(t.get_tinst());
 

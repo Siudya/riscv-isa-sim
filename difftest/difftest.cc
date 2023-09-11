@@ -295,7 +295,20 @@ void difftest_csrcpy(size_t p, void *dut, bool direction) {
 }
 
 void difftest_uarchstatus_cpy(size_t p, void *dut, bool direction) {
-  // TODO
+  // set LR-SC status
+  if (direction == DIFFTEST_TO_REF) {
+    struct sync_state_t* ms = (struct sync_state_t*)dut;
+    // XS core does not give address information
+    // If DUT lrsc is valid, we just assume REF MMU has the same address
+    // If DUT lrsc is invalid, we clear the reservation
+    if (!ms->lrscValid)
+      diff->sim->get_core(p)->get_mmu()->yield_load_reservation();
+  } else {
+    // This is not used in normal difftest, not tested for now
+    struct sync_state_t ms;
+    ms.lrscAddr = diff->sim->get_core(p)->get_mmu()->get_load_reservation_address();
+    ms.lrscValid = (ms.lrscAddr == (reg_t)-1) ? 0 : 1;
+  }
 }
 
 void update_dynamic_config(size_t p, void* config) {

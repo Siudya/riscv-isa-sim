@@ -102,4 +102,9 @@ struct diff_context_t {
   word_t dscratch1;
 };
 
+struct sync_state_t {
+  uint64_t lrscValid;
+  uint64_t lrscAddr;
+};
+
 #endif

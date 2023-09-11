@@ -245,6 +245,11 @@ public:
     load_reservation_address = (reg_t)-1;
   }
 
+  inline reg_t get_load_reservation_address()
+  {
+    return load_reservation_address;
+  }
+
   inline bool check_load_reservation(reg_t vaddr, size_t size)
   {
     if (vaddr & (size-1)) {

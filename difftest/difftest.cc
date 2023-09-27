@@ -66,21 +66,25 @@ void difftest_t::diff_get_regs(size_t p, void* diff_context) {
   ctx->mtvec = state->mtvec->read();
   ctx->stvec = state->stvec->read();
   ctx->priv = state->prv;
-  ctx->debugMode = state->debug_mode;
-  ctx->dcsr = state->dcsr->read();
-  ctx->dpc = state->dpc->read();
-  ctx->dscratch0 = state->csrmap[CSR_DSCRATCH0]->read();
-  ctx->dscratch1 = state->csrmap[CSR_DSCRATCH1]->read();
+  // ctx->debugMode = state->debug_mode;
+  // ctx->dcsr = state->dcsr->read();
+  // ctx->dpc = state->dpc->read();
+  // ctx->dscratch0 = state->csrmap[CSR_DSCRATCH0]->read();
+  // ctx->dscratch1 = state->csrmap[CSR_DSCRATCH1]->read();
 }
 
-void difftest_t::diff_set_regs(size_t p, void* diff_context) {
+void difftest_t::diff_set_regs(size_t p, void* diff_context, bool on_demand) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
   state_t * state = sim->get_core(p)->get_state();
   for (int i = 0; i < NXPR; i++) {
-    state->XPR.write(i, (sword_t)ctx->gpr[i]);
+    if (!on_demand || state->XPR[i] != ctx->gpr[i]) {
+      state->XPR.write(i, (sword_t)ctx->gpr[i]);
+    }
   }
   for (int i = 0; i < NFPR; i++) {
-    state->FPR.write(i, freg(f64(ctx->fpr[i])));
+    if (!on_demand || unboxF64(state->FPR[i]) != ctx->fpr[i]) {
+      state->FPR.write(i, freg(f64(ctx->fpr[i])));
+    } 
   }
   state->pc = ctx->pc;
   state->mstatus->write(ctx->mstatus);
@@ -101,11 +105,11 @@ void difftest_t::diff_set_regs(size_t p, void* diff_context) {
   state->mtvec->write(ctx->mtvec);
   state->stvec->write(ctx->stvec);
   state->prv = ctx->priv;
-  state->debug_mode = ctx->debugMode;
-  state->dcsr->write(ctx->dcsr);
-  state->dpc->write(ctx->dpc);
-  state->csrmap[CSR_DSCRATCH0]->write(ctx->dscratch0);
-  state->csrmap[CSR_DSCRATCH1]->write(ctx->dscratch1);
+  // state->debug_mode = ctx->debugMode;
+  // state->dcsr->write(ctx->dcsr);
+  // state->dpc->write(ctx->dpc);
+  // state->csrmap[CSR_DSCRATCH0]->write(ctx->dscratch0);
+  // state->csrmap[CSR_DSCRATCH1]->write(ctx->dscratch1);
 }
 
 void difftest_t::diff_memcpy(size_t p, reg_t dest, void* src, size_t n) {
@@ -282,9 +286,9 @@ void difftest_memcpy(size_t p, paddr_t addr, void *buf, size_t n, bool direction
   }
 }
 
-void difftest_regcpy(size_t p, void* dut, bool direction) {
+void difftest_regcpy(size_t p, void* dut, bool direction, bool on_demand) {
   if (direction == DIFFTEST_TO_REF) {
-    diff->diff_set_regs(p, dut);
+    diff->diff_set_regs(p, dut, on_demand);
   } else {
     diff->diff_get_regs(p, dut);
   }
@@ -346,7 +350,7 @@ void difftest_raise_intr(size_t p, uint64_t NO) {
   }
 }
 
-void isa_reg_display(size_t p) {
+void difftest_display(size_t p) {
   diff->diff_display(p);
 }
 
@@ -355,10 +359,9 @@ int difftest_store_commit(size_t p, uint64_t *addr, uint64_t *data, uint8_t *mas
   return 0;
 }
 
-uint64_t difftest_guided_exec(size_t p, void * guide) {
+void difftest_guided_exec(size_t p, void * guide) {
   // TODO: enable guided execution to make Spike enter page fault handler when necessory
   difftest_exec(p, 1);
-  return 0;
 }
 
 void debug_mem_sync(reg_t addr, void* buf, size_t n) {

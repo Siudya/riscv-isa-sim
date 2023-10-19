@@ -64,7 +64,7 @@ class difftest_t
 {
 public:
   void diff_memcpy(size_t p, reg_t dest, void* src, size_t n);
-  void diff_set_regs(size_t p, void* diff_context);
+  void diff_set_regs(size_t p, void* diff_context, bool on_demand);
   void diff_get_regs(size_t p, void* diff_context);
   void diff_step(size_t p, uint64_t n);
   void diff_debugmode(size_t p);
@@ -76,30 +76,25 @@ public:
 struct diff_context_t {
   word_t gpr[32];
   word_t fpr[32];
-  word_t pc;
-  word_t mstatus;
-  word_t mcause;
-  word_t mepc;
-  word_t sstatus;
-  word_t scause;
-  word_t sepc;
-  word_t satp;
-  word_t mip;
-  word_t mie;
-  word_t mscratch;
-  word_t sscratch;
-  word_t mideleg;
-  word_t medeleg;
-  word_t mtval;
-  word_t stval;
-  word_t mtvec;
-  word_t stvec;
-  word_t priv;
-  word_t debugMode;
-  word_t dcsr;
-  word_t dpc;
-  word_t dscratch0;
-  word_t dscratch1;
+  uint64_t priv;
+  uint64_t mstatus;
+  uint64_t sstatus;
+  uint64_t mepc;
+  uint64_t sepc;
+  uint64_t mtval;
+  uint64_t stval;
+  uint64_t mtvec;
+  uint64_t stvec;
+  uint64_t mcause;
+  uint64_t scause;
+  uint64_t satp;
+  uint64_t mip;
+  uint64_t mie;
+  uint64_t mscratch;
+  uint64_t sscratch;
+  uint64_t mideleg;
+  uint64_t medeleg;
+  uint64_t pc;
 };
 
 struct sync_state_t {

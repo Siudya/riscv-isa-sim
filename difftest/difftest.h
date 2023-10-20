@@ -6,7 +6,17 @@
 #include "../riscv/devices.h"
 #include "../riscv/processor.h"
 
-#define CONFIG_MSIZE (16 * 1024 * 1024 * 1024UL)
+#define dbg_printf(fmt, ...) //printf(fmt, __VA_ARGS__);
+
+#define CONFIG_MSIZE (8 * 1024 * 1024 * 1024UL)
+
+#define XS_VLEN 128
+#define VENUM64 (XS_VLEN/64)
+#define VENUM32 (XS_VLEN/32)
+#define VENUM16 (XS_VLEN/16)
+#define VENUM8  (XS_VLEN/8)
+
+#define CONFIG_RVV
 
 typedef uint64_t word_t;
 typedef int64_t sword_t;
@@ -15,7 +25,7 @@ typedef int64_t sword_t;
 typedef uint64_t paddr_t;
 #define FMT_PADDR "0x%08x"
 
-enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
+enum { REF_TO_DUT, DUT_TO_REF };
 
 #ifndef DIFFTEST_LOG_FILE
 #define DIFFTEST_LOG_FILE nullptr
@@ -63,20 +73,19 @@ using namespace spike_main;
 class difftest_t
 {
 public:
-  void diff_memcpy(size_t p, reg_t dest, void* src, size_t n);
-  void diff_set_regs(size_t p, void* diff_context, bool on_demand);
-  void diff_get_regs(size_t p, void* diff_context);
-  void diff_step(size_t p, uint64_t n);
-  void diff_debugmode(size_t p);
-  void diff_display(size_t p);
+  void diff_memcpy(reg_t dest, void* src, size_t n);
+  void diff_set_regs(void* diff_context);
+  void diff_get_regs(void* diff_context);
+  void diff_step(uint64_t n);
+  void diff_debugmode();
+  void diff_display();
   void diff_mmio_store(reg_t addr, void *buf, size_t n);
   std::unique_ptr<sim_t> sim;
 };
 
 struct diff_context_t {
   word_t gpr[32];
-  word_t fpr[32];
-  uint64_t priv;
+  uint64_t priviledgeMode;
   uint64_t mstatus;
   uint64_t sstatus;
   uint64_t mepc;
@@ -95,6 +104,31 @@ struct diff_context_t {
   uint64_t mideleg;
   uint64_t medeleg;
   uint64_t pc;
+  word_t fpr[32];
+#ifdef CONFIG_RVV
+  //vector
+  union {
+    uint64_t _64[VENUM64];
+    uint32_t _32[VENUM32];
+    uint16_t _16[VENUM16];
+    uint8_t  _8[VENUM8];
+  } vpr[32];
+
+  uint64_t vstart;
+  uint64_t vxsat;
+  uint64_t vxrm;
+  uint64_t vcsr;
+  uint64_t vl;
+  uint64_t vtype;
+  uint64_t vlenb;
+#endif // CONFIG_RVV
+#ifdef CONFIG_DIFF_DEBUG_MODE
+  uint64_t debugMode;
+  uint64_t dcsr;
+  uint64_t dpc;
+  uint64_t dscratch0;
+  uint64_t dscratch1;
+#endif // CONFIG_DIFF_DEBUG_MODE
 };
 
 struct sync_state_t {

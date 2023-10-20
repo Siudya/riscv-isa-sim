@@ -830,6 +830,7 @@ void processor_t::enter_debug_mode(uint8_t cause)
 
 void processor_t::debug_output_log(std::stringstream *s)
 {
+  printf("%s\n",s->str().c_str());
   if (log_file == stderr) {
     std::ostream out(sout_.rdbuf());
     out << s->str(); // handles command line options -d -s -l

@@ -32,22 +32,21 @@
 
 static std::unique_ptr<difftest_t> diff = std::make_unique<difftest_t>();
 
-void difftest_t::diff_step(size_t p, uint64_t n) {
-  sim->get_core(p)->step(n);
+void difftest_t::diff_step(uint64_t n) {
+  sim->get_core(0)->step(n);
   // also tick all devices
   for (auto &dev : sim->devices) dev->tick(n);
 }
 
-void difftest_t::diff_get_regs(size_t p, void* diff_context) {
+void difftest_t::diff_get_regs(void* diff_context) {
   struct diff_context_t *ctx = (struct diff_context_t *)diff_context;
-  state_t * state = sim->get_core(p)->get_state();
+  state_t * state = sim->get_core(0)->get_state();
   for (int i = 0; i < NXPR; i++) {
     ctx->gpr[i] = state->XPR[i];
   }
   for (int i = 0; i < NFPR; i++) {
     ctx->fpr[i] = unboxF64(state->FPR[i]);
   }
-  ctx->pc = state->pc;
   ctx->mstatus = state->mstatus->read();
   ctx->mcause = state->mcause->read();
   ctx->mepc = state->mepc->read();
@@ -65,7 +64,23 @@ void difftest_t::diff_get_regs(size_t p, void* diff_context) {
   ctx->stval = state->stval->read();
   ctx->mtvec = state->mtvec->read();
   ctx->stvec = state->stvec->read();
-  ctx->priv = state->prv;
+  ctx->priviledgeMode = state->prv;
+  ctx->pc = state->pc;
+#ifdef CONFIG_RVV
+  for (int i = 0; i < NVPR; i++) {
+    for (int j = 0; j < (XS_VLEN/64); j++) {
+      ctx->vpr[i]._64[j] = sim->get_core(0)->VU.elt<type_sew_t<e64>::type>(i, j, false);
+    }
+  }
+
+  ctx->vstart = sim->get_core(0)->VU.vstart->read();
+  ctx->vxsat = sim->get_core(0)->VU.vxsat->read();
+  ctx->vxrm = sim->get_core(0)->VU.vxrm->read();
+  //ctx->vcsr = sim->get_core(0)->vcsr->read();
+  ctx->vl = sim->get_core(0)->VU.vl->read();
+  ctx->vtype = sim->get_core(0)->VU.vtype->read();
+  ctx->vlenb = sim->get_core(0)->VU.vlenb;
+#endif
   // ctx->debugMode = state->debug_mode;
   // ctx->dcsr = state->dcsr->read();
   // ctx->dpc = state->dpc->read();
@@ -73,26 +88,26 @@ void difftest_t::diff_get_regs(size_t p, void* diff_context) {
   // ctx->dscratch1 = state->csrmap[CSR_DSCRATCH1]->read();
 }
 
-void difftest_t::diff_set_regs(size_t p, void* diff_context, bool on_demand) {
+void difftest_t::diff_set_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
-  state_t * state = sim->get_core(p)->get_state();
+  //output_bytes((const unsigned char *)ctx,sizeof(struct diff_context_t));
+  state_t * state = sim->get_core(0)->get_state();
   for (int i = 0; i < NXPR; i++) {
-    if (!on_demand || state->XPR[i] != ctx->gpr[i]) {
+    if (state->XPR[i] != ctx->gpr[i]) {
       state->XPR.write(i, (sword_t)ctx->gpr[i]);
     }
   }
-  for (int i = 0; i < NFPR; i++) {
-    if (!on_demand || unboxF64(state->FPR[i]) != ctx->fpr[i]) {
-      state->FPR.write(i, freg(f64(ctx->fpr[i])));
-    } 
-  }
-  state->pc = ctx->pc;
+  state->prv = ctx->priviledgeMode;
   state->mstatus->write(ctx->mstatus);
-  state->mcause->write(ctx->mcause);
-  state->mepc->write(ctx->mepc);
   state->sstatus->write(ctx->sstatus);
-  state->scause->write(ctx->scause);
+  state->mepc->write(ctx->mepc);
   state->sepc->write(ctx->sepc);
+  state->mtval->write(ctx->mtval);
+  state->stval->write(ctx->stval);
+  state->mtvec->write(ctx->mtvec);
+  state->stvec->write(ctx->stvec);
+  state->scause->write(ctx->scause);
+  state->mcause->write(ctx->mcause);
   state->satp->write(ctx->satp);
   state->mip->write(ctx->mip);
   state->mie->write(ctx->mie);
@@ -100,11 +115,43 @@ void difftest_t::diff_set_regs(size_t p, void* diff_context, bool on_demand) {
   state->csrmap[CSR_SSCRATCH]->write(ctx->sscratch);
   state->mideleg->write(ctx->mideleg);
   state->medeleg->write(ctx->medeleg);
-  state->mtval->write(ctx->mtval);
-  state->stval->write(ctx->stval);
-  state->mtvec->write(ctx->mtvec);
-  state->stvec->write(ctx->stvec);
-  state->prv = ctx->priv;
+  state->pc = ctx->pc;
+  for (int i = 0; i < NFPR; i++) {
+    if (unboxF64(state->FPR[i]) != ctx->fpr[i]) {
+      state->FPR.write(i, freg(f64(ctx->fpr[i])));
+    }
+  }
+#ifdef CONFIG_RVV
+  for (int i = 0; i < NVPR; i++) {
+    for (int j = 0; j < (XS_VLEN/64); j++) {
+      sim->get_core(0)->VU.elt<type_sew_t<e64>::type>(i, j, false) = ctx->vpr[i]._64[j];
+    }
+  }
+
+  if (sim->get_core(0)->VU.vstart->read() != ctx->vstart) {
+    sim->get_core(0)->VU.vstart->write_raw(ctx->vstart);
+  }
+  if (sim->get_core(0)->VU.vxsat->read() != ctx->vxsat) {
+    sim->get_core(0)->VU.vxsat->write(ctx->vxsat);
+  }
+  if (sim->get_core(0)->VU.vxrm->read() != ctx->vxrm) {
+    sim->get_core(0)->VU.vxrm->write_raw(ctx->vxrm);
+  }
+#if 0
+  if (sim->get_core(0)->VU.vcsr->read() != ctx->vcsr) {
+    sim->get_core(0)->vcsr->write_raw(ctx->vcsr);
+  }
+#endif
+  if (sim->get_core(0)->VU.vl->read() != ctx->vl) {
+    sim->get_core(0)->VU.vl->write_raw(ctx->vl);
+  }
+  if (sim->get_core(0)->VU.vtype->read() != ctx->vtype) {
+    sim->get_core(0)->VU.vtype->write_raw(ctx->vtype);
+  }
+  if (sim->get_core(0)->VU.vlenb != ctx->vlenb) {
+    sim->get_core(0)->VU.vlenb = ctx->vlenb;
+  }
+#endif
   // state->debug_mode = ctx->debugMode;
   // state->dcsr->write(ctx->dcsr);
   // state->dpc->write(ctx->dpc);
@@ -112,7 +159,7 @@ void difftest_t::diff_set_regs(size_t p, void* diff_context, bool on_demand) {
   // state->csrmap[CSR_DSCRATCH1]->write(ctx->dscratch1);
 }
 
-void difftest_t::diff_memcpy(size_t p, reg_t dest, void* src, size_t n) {
+void difftest_t::diff_memcpy(reg_t dest, void* src, size_t n) {
   #ifdef CONFIG_USE_SPARSEMM
   printf("[sp-ram] start sync RAM from dut, please wait ...\n");
   float dsize = 0;
@@ -147,23 +194,23 @@ void difftest_t::diff_memcpy(size_t p, reg_t dest, void* src, size_t n) {
   sp_mem->copy_bytes(fc);
   printf("[sp-ram] copy data (%.2f kB) from dut complete\n", dsize/1024.0);
   #else
-  mmu_t* mmu = sim->get_core(p)->get_mmu();
+  mmu_t* mmu = sim->get_core(0)->get_mmu();
   for (size_t i = 0; i < n; i++) {
     mmu->store(dest+i, *((uint8_t*)src+i));
   }
   #endif
 }
 
-void difftest_t::diff_debugmode(size_t p){
+void difftest_t::diff_debugmode(){
   // Debug Intr causes entry to debug mode
-  processor_t *proc = sim->get_core(p);
+  processor_t *proc = sim->get_core(0);
   proc->halt_request = proc->HR_REGULAR;
   proc->step(0); // just force processor to enter debug mode
   proc->halt_request = proc->HR_NONE;
 }
 
-void difftest_t::diff_display(size_t p) {
-  state_t *state = sim->get_core(p)->get_state();
+void difftest_t::diff_display() {
+  state_t *state = sim->get_core(0)->get_state();
   int i;
   for (i = 0; i < 32; i++) {
     printf("%4s: " FMT_WORD " ", xpr_name[i], state->XPR[i]);
@@ -208,7 +255,6 @@ void difftest_t::diff_mmio_store(reg_t addr, void *buf, size_t n) {
 extern "C" {
 
 void difftest_init() {
-
   //======  Constructing cfg ======//
 
   char mem_layout_str[100];
@@ -227,7 +273,7 @@ void difftest_init() {
             "RV64IMAFDCV_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_"
             "zksh_svinval",
             /*default_priv=*/"MSU",
-            /*default_varch=*/"vlen:128,elen:64",
+            /*default_varch=*/"vlen:128,elen:64,vstartalu:1",
             /*default_misaligned=*/false,
             /*default_endianness*/ endianness_little,
             /*default_pmpregions=*/16,
@@ -278,49 +324,54 @@ void difftest_init() {
   }
 }
 
-void difftest_memcpy(size_t p, paddr_t addr, void *buf, size_t n, bool direction) {
-  if (direction == DIFFTEST_TO_REF) {
-    diff->diff_memcpy(p, addr, buf, n);
+void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
+  //((const unsigned char*)buf,n);
+  if (direction == DUT_TO_REF) {
+    diff->diff_memcpy(addr, buf, n);
   } else {
     assert(0);
   }
 }
 
-void difftest_regcpy(size_t p, void* dut, bool direction, bool on_demand) {
-  if (direction == DIFFTEST_TO_REF) {
-    diff->diff_set_regs(p, dut, on_demand);
+void difftest_regcpy(void* dut, bool direction) {
+  if (direction == DUT_TO_REF) {
+    diff->diff_set_regs(dut);
   } else {
-    diff->diff_get_regs(p, dut);
+    diff->diff_get_regs(dut);
   }
 }
 
-void difftest_csrcpy(size_t p, void *dut, bool direction) {
+void difftest_csrcpy(void *dut, bool direction) {
   // TODO
 }
 
-void difftest_uarchstatus_cpy(size_t p, void *dut, bool direction) {
+void difftest_uarchstatus_cpy(void *dut, bool direction) {
   // set LR-SC status
-  if (direction == DIFFTEST_TO_REF) {
+  if (direction == DUT_TO_REF) {
     struct sync_state_t* ms = (struct sync_state_t*)dut;
     // XS core does not give address information
     // If DUT lrsc is valid, we just assume REF MMU has the same address
     // If DUT lrsc is invalid, we clear the reservation
     if (!ms->lrscValid)
-      diff->sim->get_core(p)->get_mmu()->yield_load_reservation();
+      diff->sim->get_core(0)->get_mmu()->yield_load_reservation();
   } else {
     // This is not used in normal difftest, not tested for now
     struct sync_state_t ms;
-    ms.lrscAddr = diff->sim->get_core(p)->get_mmu()->get_load_reservation_address();
+    ms.lrscAddr = diff->sim->get_core(0)->get_mmu()->get_load_reservation_address();
     ms.lrscValid = (ms.lrscAddr == (reg_t)-1) ? 0 : 1;
   }
 }
 
-void update_dynamic_config(size_t p, void* config) {
+void difftest_uarchstatus_sync(void *dut) {
+  //ref->update_uarch_status(dut);
+}
+
+void update_dynamic_config(void* config) {
   // TODO
 }
 
-void difftest_exec(size_t p, uint64_t n) {
-  diff->diff_step(p, n);
+void difftest_exec(uint64_t n) {
+  diff->diff_step(n);
 }
 
 // Refer to backend/fu/util/CSRConst.scala:245 for IRQs:
@@ -330,11 +381,11 @@ void difftest_exec(size_t p, uint64_t n) {
 //    IRQ_SEIP(1), IRQ_SSIP(9), IRQ_STIP(5),
 //    IRQ_UEIP(0), IRQ_USIP(8), IRQ_UTIP(4)
 //  )
-void difftest_raise_intr(size_t p, uint64_t NO) {
+void difftest_raise_intr(uint64_t NO) {
   if (NO == 0xc) {
-    diff->diff_debugmode(p);  // Debug Intr
+    diff->diff_debugmode();  // Debug Intr
   } else {
-    state_t * state = diff->sim->get_core(p)->get_state();
+    state_t * state = diff->sim->get_core(0)->get_state();
     uint64_t mip_bit = 0x1UL << (NO & 0xf);
     bool is_timer_interrupt = mip_bit & 0xa0UL;
     bool is_external_interrupt = mip_bit & 0xb00UL;
@@ -342,37 +393,37 @@ void difftest_raise_intr(size_t p, uint64_t NO) {
     bool external_set = (is_timer_interrupt || is_external_interrupt) && from_outside;
     if (external_set) {
       state->mip->backdoor_write_with_mask(mip_bit, mip_bit);
-      difftest_exec(p, 1);
+      difftest_exec(1);
       state->mip->backdoor_write_with_mask(mip_bit, ~mip_bit);
     } else {
-      difftest_exec(p, 1);
+      difftest_exec(1);
     }
   }
 }
 
-void difftest_display(size_t p) {
-  diff->diff_display(p);
+void difftest_display() {
+  diff->diff_display();
 }
 
-int difftest_store_commit(size_t p, uint64_t *addr, uint64_t *data, uint8_t *mask) {
+int difftest_store_commit(uint64_t *addr, uint64_t *data, uint8_t *mask) {
   // TODO: enable store commit checking after implementing a store commit queue
   return 0;
 }
 
-void difftest_guided_exec(size_t p, void * guide) {
+void difftest_guided_exec(void * guide) {
   // TODO: enable guided execution to make Spike enter page fault handler when necessory
-  difftest_exec(p, 1);
+  difftest_exec(1);
 }
 
-void debug_mem_sync(reg_t addr, void* buf, size_t n) {
-  diff->diff_mmio_store(addr, buf, n);
+void debug_mem_sync(reg_t addr, uint64_t buf, size_t n) {
+  diff->diff_mmio_store(addr, (void*)buf, n);
 }
 
 void difftest_load_flash(void *flash_bin, size_t size) {
   // TODO
 }
 
-void difftest_query_ref(size_t p, void *result_buffer, uint64_t type){
+void difftest_query_ref(void *result_buffer, uint64_t type){
   // TODO
 }
 

@@ -14,7 +14,8 @@ CONFIGURE_FLAGS =         \
 	-q                    \
 	--with-boost=no       \
 	--with-boost-asio=no  \
-	--with-boost-regex=no
+	--with-boost-regex=no \
+	CFLAGS="-g0" CXXFLAGS="-g0"
 
 INC_DEPENDENCIES = fesvr riscv disasm customext fdt softfloat spike_main spike_dasm build
 INC_PATH  = -I$(REPO_PATH) $(addprefix -I$(REPO_PATH)/, $(INC_DEPENDENCIES))

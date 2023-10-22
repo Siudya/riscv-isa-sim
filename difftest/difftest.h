@@ -6,8 +6,6 @@
 #include "../riscv/devices.h"
 #include "../riscv/processor.h"
 
-#define dbg_printf(fmt, ...) //printf(fmt, __VA_ARGS__);
-
 #define CONFIG_MSIZE (8 * 1024 * 1024 * 1024UL)
 
 #define XS_VLEN 128
@@ -73,18 +71,19 @@ using namespace spike_main;
 class difftest_t
 {
 public:
-  void diff_memcpy(reg_t dest, void* src, size_t n);
-  void diff_set_regs(void* diff_context);
-  void diff_get_regs(void* diff_context);
-  void diff_step(uint64_t n);
-  void diff_debugmode();
-  void diff_display();
+  void diff_memcpy(size_t p, reg_t dest, void* src, size_t n);
+  void diff_set_regs(size_t p, void* diff_context, bool on_demand);
+  void diff_get_regs(size_t p, void* diff_context);
+  void diff_step(size_t p, uint64_t n);
+  void diff_debugmode(size_t p);
+  void diff_display(size_t p);
   void diff_mmio_store(reg_t addr, void *buf, size_t n);
   std::unique_ptr<sim_t> sim;
 };
 
 struct diff_context_t {
   word_t gpr[32];
+  word_t fpr[32];
   uint64_t priviledgeMode;
   uint64_t mstatus;
   uint64_t sstatus;
@@ -104,7 +103,6 @@ struct diff_context_t {
   uint64_t mideleg;
   uint64_t medeleg;
   uint64_t pc;
-  word_t fpr[32];
 #ifdef CONFIG_RVV
   //vector
   union {

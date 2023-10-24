@@ -266,6 +266,18 @@ void difftest_t::diff_display(size_t p) {
       printf("\n");
     }
   }
+  #ifdef CONFIG_RVV
+  vectorUnit_t vu = sim->get_core(p)->VU;
+  for (i = 0; i < 32; i++) {
+    printf("%4s: " FMT_WORD "_%016lx" " ",
+      vr_name[i],
+      vu.elt<type_sew_t<e64>::type>(i, 1, false),
+      vu.elt<type_sew_t<e64>::type>(i, 0, false));
+    if (i % 2 == 1) {
+      printf("\n");
+    }
+  }
+  #endif
   printf("pc: " FMT_WORD " mstatus: " FMT_WORD " mcause: " FMT_WORD
          " mepc: " FMT_WORD "\n",
          state->pc, state->mstatus->read(), state->mcause->read(),

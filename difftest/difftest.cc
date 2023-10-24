@@ -101,7 +101,6 @@ void difftest_t::diff_set_regs(size_t p, void* diff_context, bool on_demand) {
     state->prv = ctx->priviledgeMode;
   }
   if (!on_demand || state->mstatus->read() != ctx->mstatus) {
-    printf("ctx->mstatus=0x%lx\n",ctx->mstatus);
     state->mstatus->write(ctx->mstatus);
   }
   if (!on_demand || state->sstatus->read() != ctx->sstatus) {
@@ -167,12 +166,11 @@ for (int i = 0; i < NVPR; i++) {
       sim->get_core(p)->VU.elt<type_sew_t<e64>::type>(i, j, false) = ctx->vpr[i]._64[j];
     }
   }
-  //printf("%s,%s,%d,sim->get_core(p)->get_state()->mstatus->read()=0x%lx\n",__FILE__,__FUNCTION__,__LINE__,sim->get_core(0)->get_state()->mstatus->read());
+
   if (!on_demand || sim->get_core(p)->VU.vxsat->read() != ctx->vxsat) {
     //sim->get_core(p)->VU.vxsat->write(ctx->vxsat);
     //state->csrmap[CSR_VXSAT]->write(ctx->vxsat);
   }
-  //printf("%s,%s,%d,sim->get_core(p)->get_state()->mstatus->read()=0x%lx\n",__FILE__,__FUNCTION__,__LINE__,sim->get_core(0)->get_state()->mstatus->read());
 
   if (!on_demand || sim->get_core(p)->VU.vstart->read() != ctx->vstart) {
     sim->get_core(p)->VU.vstart->write_raw(ctx->vstart);

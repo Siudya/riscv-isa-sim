@@ -93,7 +93,7 @@ public:
   int setvl_count;
   reg_t vlmax;
   reg_t vlenb;
-  csr_t_p vxsat;
+  std::shared_ptr<vxsat_csr_t> vxsat;
   vector_csr_t_p vxrm, vstart, vl, vtype;
   reg_t vma, vta;
   reg_t vsew;

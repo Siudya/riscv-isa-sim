@@ -37,6 +37,8 @@ class csr_t {
   // permission checking needed or allowed.
   // Child classes must implement unlogged_write()
   void write(const reg_t val) noexcept;
+  // Write without regard to mask, and without side effect.
+  void write_raw(const reg_t val) noexcept;
 
   virtual ~csr_t();
 
@@ -77,6 +79,8 @@ class basic_csr_t: public csr_t {
   virtual reg_t read() const noexcept override {
     return val;
   }
+  // Write without regard to mask, and without side effect.
+  void write_raw(const reg_t val) noexcept;
 
  protected:
   virtual bool unlogged_write(const reg_t val) noexcept override;
@@ -747,6 +751,8 @@ class vxsat_csr_t: public masked_csr_t {
  public:
   vxsat_csr_t(processor_t* const proc, const reg_t addr);
   virtual void verify_permissions(insn_t insn, bool write) const override;
+  // Write without regard to mask, and without touching mstatus.VS
+  void write_raw(const reg_t val) noexcept;
  protected:
   virtual bool unlogged_write(const reg_t val) noexcept override;
 };

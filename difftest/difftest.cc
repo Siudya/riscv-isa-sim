@@ -76,7 +76,7 @@ void difftest_t::diff_get_regs(size_t p, void* diff_context) {
   ctx->vstart = sim->get_core(0)->VU.vstart->read();
   ctx->vxsat = sim->get_core(0)->VU.vxsat->read();
   ctx->vxrm = sim->get_core(0)->VU.vxrm->read();
-  //ctx->vcsr = sim->get_core(0)->vcsr->read();
+  ctx->vcsr = state->csrmap[CSR_VCSR]->read();
   ctx->vl = sim->get_core(0)->VU.vl->read();
   ctx->vtype = sim->get_core(0)->VU.vtype->read();
   ctx->vlenb = sim->get_core(0)->VU.vlenb;
@@ -168,8 +168,7 @@ for (int i = 0; i < NVPR; i++) {
   }
 
   if (!on_demand || sim->get_core(p)->VU.vxsat->read() != ctx->vxsat) {
-    //sim->get_core(p)->VU.vxsat->write(ctx->vxsat);
-    //state->csrmap[CSR_VXSAT]->write(ctx->vxsat);
+    sim->get_core(p)->VU.vxsat->write_raw(ctx->vxsat);
   }
 
   if (!on_demand || sim->get_core(p)->VU.vstart->read() != ctx->vstart) {
@@ -180,7 +179,7 @@ for (int i = 0; i < NVPR; i++) {
   }
 #if 0
   if (!on_demand || sim->get_core(p)->VU.vcsr->read() != ctx->vcsr) {
-    sim->get_core(p)->vcsr->write_raw(ctx->vcsr);
+    sim->get_core(p)->VU.vcsr->write_raw(ctx->vcsr);
   }
 #endif
   if (!on_demand || sim->get_core(p)->VU.vl->read() != ctx->vl) {

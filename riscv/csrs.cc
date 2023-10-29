@@ -58,6 +58,13 @@ void csr_t::write(const reg_t val) noexcept {
   }
 }
 
+void csr_t::write_raw(const reg_t val) noexcept {
+  const bool success = unlogged_write(val);
+  if (success) {
+    log_write();
+  }
+}
+
 void csr_t::log_write() const noexcept {
   log_special_write(address, written_value());
 }
@@ -1436,6 +1443,12 @@ void vxsat_csr_t::verify_permissions(insn_t insn, bool write) const {
   if (!proc->extension_enabled('V') && !proc->extension_enabled(EXT_ZPN))
     throw trap_illegal_instruction(insn.bits());
   masked_csr_t::verify_permissions(insn, write);
+}
+
+void vxsat_csr_t::write_raw(const reg_t val) noexcept {
+  const bool success = masked_csr_t::unlogged_write(val);
+  if (success)
+    log_write();
 }
 
 bool vxsat_csr_t::unlogged_write(const reg_t val) noexcept {

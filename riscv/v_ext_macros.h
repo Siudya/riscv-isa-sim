@@ -20,7 +20,7 @@ T setAllBitsToOne(T value) {
   const int midx = i / 64; \
   const int mpos = i % 64;
 
-#define V_EXT_VSTART_CHECK do { if(P.VU.vstart->read() >= P.VU.vl->read()) return npc;  } while (0)
+#define V_EXT_VSTART_CHECK do { if(P.VU.vstart->read() >= P.VU.vl->read()) { P.VU.vstart->write(0); return npc; } } while (0)
 
 //mata_action 0:origin, 1:calculate, 2:pad 1s
 #define VI_LOOP_ELEMENT_SKIP(BODY) \

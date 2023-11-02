@@ -713,7 +713,7 @@
 #define VI_ZVK_VV_WIDENING_ULOOP(BODY) \
   do { \
     VI_CHECK_DSS(true); \
-    VI_LOOP_BASE \
+    VI_LOOP_BASE(1) \
       switch (sew) { \
         case e8: { \
           VI_ZVK_VV_WIDENING_U_PARAMS(e8); \
@@ -750,8 +750,8 @@
 //  - 'rs1', unsigned, SEW width, by value, constant.
 #define VI_ZVK_VX_WIDENING_ULOOP(BODY) \
   do { \
-    VI_CHECK_DSS(false); \
-    VI_LOOP_BASE \
+    VI_CHECK_DSS(true); \
+    VI_LOOP_BASE(1) \
       switch (sew) { \
         case e8: { \
           VI_ZVK_VX_WIDENING_U_PARAMS(e8); \
@@ -788,8 +788,8 @@
 //  - 'zimm5', unsigned, SEW width, by value, constant.
 #define VI_ZVK_VI_WIDENING_ULOOP(BODY) \
   do { \
-    VI_CHECK_DSS(false); \
-    VI_LOOP_BASE \
+    VI_CHECK_DSS(true); \
+    VI_LOOP_BASE(1) \
       switch (sew) { \
         case e8: { \
           VI_ZVK_VI_WIDENING_U_PARAMS(e8); \

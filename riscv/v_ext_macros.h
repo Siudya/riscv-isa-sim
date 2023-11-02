@@ -223,7 +223,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 //
 // vector: loop header and end helper
 //
-#define VI_GENERAL_LOOP_BASE \
+#define VI_GENERAL_LOOP_BASE(factor) \
   require(P.VU.vsew >= e8 && P.VU.vsew <= e64); \
   require_vector(true); \
   reg_t vl = P.VU.vl->read(); \
@@ -232,7 +232,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   reg_t UNUSED rs1_num = insn.rs1(); \
   reg_t rs2_num = insn.rs2(); \
   V_EXT_VSTART_CHECK; \
-  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) {
+  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/P.VU.vsew*(factor))); ++i) {
 
 //
 // vector: loop carry header and end helper
@@ -247,8 +247,8 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   reg_t rs2_num = insn.rs2(); \
   V_EXT_VSTART_CHECK; \
   for (reg_t i = P.VU.vstart->read(); i < P.VU.VLEN; ++i) {
-#define VI_LOOP_BASE \
-    VI_GENERAL_LOOP_BASE \
+#define VI_LOOP_BASE(factor) \
+    VI_GENERAL_LOOP_BASE(factor) \
     VI_LOOP_ELEMENT_SKIP();
 
 #define VI_LOOP_END \
@@ -278,7 +278,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   } \
   P.VU.vstart->write(0);
 #define VI_LOOP_WITH_CARRY_BASE \
-  VI_GENERAL_LOOP_BASE \
+  VI_GENERAL_LOOP_BASE(1) \
   VI_MASK_VARS \
   int mata_action = 0; \
   auto &v0 = P.VU.elt<uint64_t>(0, midx); \
@@ -325,7 +325,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   P.VU.vstart->write(0);
 
 #define VI_LOOP_NSHIFT_BASE \
-  VI_GENERAL_LOOP_BASE; \
+  VI_GENERAL_LOOP_BASE(1); \
   VI_LOOP_ELEMENT_SKIP({ \
     require(!(insn.rd() == 0 && P.VU.vflmul > 1)); \
   });
@@ -588,7 +588,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   bool UNUSED use_first = (P.VU.elt<uint64_t>(0, midx) >> mpos) & 0x1;
 
 #define VI_MERGE_LOOP_BASE \
-  VI_GENERAL_LOOP_BASE \
+  VI_GENERAL_LOOP_BASE(1) \
   VI_MERGE_VARS \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
@@ -810,7 +810,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 // genearl VXI signed/unsigned loop
 #define VI_VV_ULOOP(BODY) \
   VI_CHECK_SSS(true) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -851,7 +851,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VV_LOOP(BODY) \
   VI_CHECK_SSS(true) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -892,7 +892,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_V_ULOOP(BODY) \
   VI_CHECK_SSS(false) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (sew == e8) { \
     V_U_PARAMS(e8); \
     BODY; \
@@ -910,7 +910,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VX_ULOOP(BODY) \
   VI_CHECK_SSS(false) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -951,7 +951,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VX_LOOP(BODY) \
   VI_CHECK_SSS(false) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -992,7 +992,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VI_ULOOP(BODY) \
   VI_CHECK_SSS(false) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1033,7 +1033,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VI_LOOP(BODY) \
   VI_CHECK_SSS(false) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1075,7 +1075,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 // signed unsigned operation loop (e.g. mulhsu)
 #define VI_VV_SU_LOOP(BODY) \
   VI_CHECK_SSS(true) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1116,7 +1116,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VX_SU_LOOP(BODY) \
   VI_CHECK_SSS(false) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1158,7 +1158,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 // narrow operation loop
 #define VI_VV_LOOP_NARROW(BODY) \
   VI_CHECK_SDS(true); \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(2) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1189,7 +1189,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VX_LOOP_NARROW(BODY) \
   VI_CHECK_SDS(false); \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(2) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1220,7 +1220,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VI_LOOP_NARROW(BODY) \
   VI_CHECK_SDS(false); \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(2) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1353,7 +1353,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 // widen operation loop
 #define VI_VV_LOOP_WIDEN(BODY) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(0.5) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1374,7 +1374,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   VI_LOOP_END
 
 #define VI_VX_LOOP_WIDEN(BODY) \
-  VI_LOOP_BASE \
+  VI_LOOP_BASE(0.5) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1496,7 +1496,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   auto &vd_0_des = P.VU.elt<type_sew_t<sew2>::type>(rd_num, 0, true); \
   auto vd_0_res = P.VU.elt<type_sew_t<sew2>::type>(rs1_num, 0); \
   V_EXT_VSTART_CHECK; \
-  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
+  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))); ++i) { \
     VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
     auto vs2 = P.VU.elt<type_sew_t<sew1>::type>(rs2_num, i);
 
@@ -1529,7 +1529,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   auto &vd_0_des = P.VU.elt<type_usew_t<sew2>::type>(rd_num, 0, true); \
   auto vd_0_res = P.VU.elt<type_usew_t<sew2>::type>(rs1_num, 0); \
   V_EXT_VSTART_CHECK; \
-  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
+  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))); ++i) { \
     VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
     auto vs2 = P.VU.elt<type_usew_t<sew1>::type>(rs2_num, i);
 
@@ -1987,7 +1987,7 @@ reg_t index[P.VU.vlmax]; \
     require_noover_widen(insn.rd(), P.VU.vflmul, insn.rs2(), P.VU.vflmul / div); \
   } \
   reg_t pat = (((P.VU.vsew >> 3) << 4) | from >> 3); \
-  VI_GENERAL_LOOP_BASE \
+  VI_GENERAL_LOOP_BASE(1) \
   VI_LOOP_ELEMENT_SKIP(); \
     if (0 == P.VU.vta && i >= vl) { \
       continue; \
@@ -2065,10 +2065,10 @@ reg_t index[P.VU.vlmax]; \
   reg_t UNUSED rs2_num = insn.rs2(); \
   softfloat_roundingMode = STATE.frm->read();
 
-#define VI_VFP_LOOP_BASE \
+#define VI_VFP_LOOP_BASE(factor) \
   VI_VFP_COMMON \
   V_EXT_VSTART_CHECK; \
-  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
+  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/P.VU.vsew*(factor))); ++i) { \
     VI_LOOP_ELEMENT_SKIP();
 
 #define VI_VFP_BF16_LOOP_BASE \
@@ -2174,7 +2174,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_VV_LOOP(BODY16, BODY32, BODY64) \
   VI_CHECK_SSS(true); \
-  VI_VFP_LOOP_BASE \
+  VI_VFP_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -2222,7 +2222,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_V_LOOP(BODY16, BODY32, BODY64) \
   VI_CHECK_SSS(false); \
-  VI_VFP_LOOP_BASE \
+  VI_VFP_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -2319,7 +2319,7 @@ reg_t index[P.VU.vlmax]; \
     case e16: { \
       float32_t vd_0 = P.VU.elt<float32_t>(rs1_num, 0); \
       V_EXT_VSTART_CHECK; \
-      for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
+      for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))); ++i) { \
         VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
         is_active = true; \
         float32_t vs2 = f16_to_f32(P.VU.elt<float16_t>(rs2_num, i)); \
@@ -2335,7 +2335,7 @@ reg_t index[P.VU.vlmax]; \
     case e32: { \
       float64_t vd_0 = P.VU.elt<float64_t>(rs1_num, 0); \
       V_EXT_VSTART_CHECK; \
-      for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
+      for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))); ++i) { \
         VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
         is_active = true; \
         float64_t vs2 = f32_to_f64(P.VU.elt<float32_t>(rs2_num, i)); \
@@ -2355,7 +2355,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_VF_LOOP(BODY16, BODY32, BODY64) \
   VI_CHECK_SSS(false); \
-  VI_VFP_LOOP_BASE \
+  VI_VFP_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -2496,7 +2496,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_VF_LOOP_WIDE(BODY16, BODY32) \
   VI_CHECK_DSS(false); \
-  VI_VFP_LOOP_BASE \
+  VI_VFP_LOOP_BASE(0.5) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -2555,7 +2555,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_VV_LOOP_WIDE(BODY16, BODY32) \
   VI_CHECK_DSS(true); \
-  VI_VFP_LOOP_BASE \
+  VI_VFP_LOOP_BASE(0.5) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -2614,7 +2614,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_WF_LOOP_WIDE(BODY16, BODY32) \
   VI_CHECK_DDS(false); \
-  VI_VFP_LOOP_BASE \
+  VI_VFP_LOOP_BASE(0.5) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -2655,7 +2655,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_WV_LOOP_WIDE(BODY16, BODY32) \
   VI_CHECK_DDS(true); \
-  VI_VFP_LOOP_BASE \
+  VI_VFP_LOOP_BASE(0.5) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \

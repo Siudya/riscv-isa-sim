@@ -2067,6 +2067,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_LOOP_BASE \
   VI_VFP_COMMON \
+  V_EXT_VSTART_CHECK; \
   for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
     VI_LOOP_ELEMENT_SKIP();
 
@@ -2077,6 +2078,7 @@ reg_t index[P.VU.vlmax]; \
 
 #define VI_VFP_LOOP_CMP_BASE \
   VI_VFP_COMMON \
+  V_EXT_VSTART_CHECK; \
   for (reg_t i = P.VU.vstart->read(); i < P.VU.VLEN; ++i) { \
     VI_LOOP_ELEMENT_SKIP(); \
     uint64_t mmask = UINT64_C(1) << mpos; \
@@ -2088,6 +2090,7 @@ reg_t index[P.VU.vlmax]; \
   float##width##_t vs1_0 = P.VU.elt<float##width##_t>(rs1_num, 0); \
   vd_0 = vs1_0; \
   bool is_active = false; \
+  V_EXT_VSTART_CHECK; \
   for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
     VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
     float##width##_t vs2 = P.VU.elt<float##width##_t>(rs2_num, i); \
@@ -2315,6 +2318,7 @@ reg_t index[P.VU.vlmax]; \
   switch (P.VU.vsew) { \
     case e16: { \
       float32_t vd_0 = P.VU.elt<float32_t>(rs1_num, 0); \
+      V_EXT_VSTART_CHECK; \
       for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
         VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
         is_active = true; \
@@ -2330,6 +2334,7 @@ reg_t index[P.VU.vlmax]; \
     } \
     case e32: { \
       float64_t vd_0 = P.VU.elt<float64_t>(rs1_num, 0); \
+      V_EXT_VSTART_CHECK; \
       for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
         VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
         is_active = true; \
@@ -2698,6 +2703,7 @@ reg_t index[P.VU.vlmax]; \
   reg_t UNUSED rs1_num = insn.rs1(); \
   reg_t rs2_num = insn.rs2(); \
   softfloat_roundingMode = STATE.frm->read(); \
+  V_EXT_VSTART_CHECK; \
   for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
     VI_LOOP_ELEMENT_SKIP();
 

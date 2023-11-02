@@ -403,7 +403,7 @@ void difftest_uarchstatus_cpy(size_t p, void *dut, bool direction) {
     // XS core does not give address information
     // If DUT lrsc is valid, we just assume REF MMU has the same address
     // If DUT lrsc is invalid, we clear the reservation
-    if (!ms->lrscValid)
+    if (ms->lrscValid)
       diff->sim->get_core(p)->get_mmu()->yield_load_reservation();
   } else {
     // This is not used in normal difftest, not tested for now

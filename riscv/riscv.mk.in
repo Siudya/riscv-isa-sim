@@ -134,6 +134,7 @@ riscv_insn_ext_i = \
 	xori \
 	fence \
 	fence_i \
+	xs_trap \
 
 riscv_insn_ext_a = \
 	amoadd_d \

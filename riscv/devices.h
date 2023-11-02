@@ -187,4 +187,11 @@ void read_little_endian_reg(T word, reg_t addr, size_t len, uint8_t* bytes)
   }
 }
 
+class uartlite_t : public abstract_device_t {
+  public:
+  bool load(reg_t addr, size_t len, uint8_t* bytes) override;
+  bool store(reg_t addr, size_t len, const uint8_t* bytes) override;
+  ~uartlite_t() override;
+};
+
 #endif

@@ -63,6 +63,7 @@ riscv_srcs = \
 	rom.cc \
 	clint.cc \
 	plic.cc \
+	uartlite.cc \
 	ns16550.cc \
 	debug_module.cc \
 	remote_bitbang.cc \

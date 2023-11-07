@@ -752,7 +752,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define REDUCTION_LOOP(x, BODY) \
   VI_LOOP_REDUCTION_BASE(x) \
-  if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+  if(1 == P.VU.vta && i < (P.VU.VLEN/P.VU.vsew)) \
     P.VU.elt<type_sew_t<x>::type>(rd_num, i, true) = ((type_sew_t<x>::type)~0); \
   if(false == skip && i < vl) { \
     BODY; \
@@ -787,7 +787,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define REDUCTION_ULOOP(x, BODY) \
   VI_ULOOP_REDUCTION_BASE(x) \
-  if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+  if(1 == P.VU.vta && i < (P.VU.VLEN/P.VU.vsew)) \
     P.VU.elt<type_sew_t<x>::type>(rd_num, i, true) = ((type_sew_t<x>::type)~0); \
   if(false == skip && i < vl) { \
     BODY; \
@@ -1158,7 +1158,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 // narrow operation loop
 #define VI_VV_LOOP_NARROW(BODY) \
   VI_CHECK_SDS(true); \
-  VI_LOOP_BASE(2) \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1189,7 +1189,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VX_LOOP_NARROW(BODY) \
   VI_CHECK_SDS(false); \
-  VI_LOOP_BASE(2) \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1220,7 +1220,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define VI_VI_LOOP_NARROW(BODY) \
   VI_CHECK_SDS(false); \
-  VI_LOOP_BASE(2) \
+  VI_LOOP_BASE(1) \
   if (0 == P.VU.vta && i >= vl) { \
     continue; \
   } \
@@ -1502,7 +1502,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define WIDE_REDUCTION_LOOP(sew1, sew2, BODY) \
   VI_LOOP_WIDE_REDUCTION_BASE(sew1, sew2) \
-  if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+  if(1 == P.VU.vta && i < (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))) \
 		P.VU.elt<type_sew_t<sew2>::type>(rd_num, i, true) = ((type_sew_t<sew2>::type)~0); \
 	if(false == skip && i < vl) { \
     BODY; \
@@ -1535,7 +1535,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 
 #define WIDE_REDUCTION_ULOOP(sew1, sew2, BODY) \
   VI_ULOOP_WIDE_REDUCTION_BASE(sew1, sew2) \
-  if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+  if(1 == P.VU.vta && i < (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))) \
 		P.VU.elt<type_sew_t<sew2>::type>(rd_num, i, true) = ((type_sew_t<sew2>::type)~0); \
 	if(false == skip && i < vl) { \
     BODY; \
@@ -2273,7 +2273,7 @@ reg_t index[P.VU.vlmax]; \
   switch (P.VU.vsew) { \
     case e16: { \
       VI_VFP_LOOP_REDUCTION_BASE(16) \
-        if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+        if(1 == P.VU.vta && i < (P.VU.VLEN/P.VU.vsew)) \
           P.VU.elt<type_sew_t<16>::type>(rd_num, i, true) = ((type_sew_t<16>::type)~0); \
         if(false == skip && i < vl) { \
           BODY16; \
@@ -2284,7 +2284,7 @@ reg_t index[P.VU.vlmax]; \
     } \
     case e32: { \
       VI_VFP_LOOP_REDUCTION_BASE(32) \
-        if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+        if(1 == P.VU.vta && i < (P.VU.VLEN/P.VU.vsew)) \
           P.VU.elt<type_sew_t<32>::type>(rd_num, i, true) = ((type_sew_t<32>::type)~0); \
         if(false == skip && i < vl) { \
           BODY32; \
@@ -2295,7 +2295,7 @@ reg_t index[P.VU.vlmax]; \
     } \
     case e64: { \
       VI_VFP_LOOP_REDUCTION_BASE(64) \
-        if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+        if(1 == P.VU.vta && i < (P.VU.VLEN/P.VU.vsew)) \
           P.VU.elt<type_sew_t<64>::type>(rd_num, i, true) = ((type_sew_t<64>::type)~0); \
         if(false == skip && i < vl) { \
           BODY64; \
@@ -2323,7 +2323,7 @@ reg_t index[P.VU.vlmax]; \
         VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
         is_active = true; \
         float32_t vs2 = f16_to_f32(P.VU.elt<float16_t>(rs2_num, i)); \
-        if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+        if(1 == P.VU.vta && i < (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))) \
           P.VU.elt<type_sew_t<e32>::type>(rd_num, i, true) = ((type_sew_t<e32>::type)~0); \
         if(false == skip && i < vl) { \
           BODY16; \
@@ -2339,7 +2339,7 @@ reg_t index[P.VU.vlmax]; \
         VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
         is_active = true; \
         float64_t vs2 = f32_to_f64(P.VU.elt<float32_t>(rs2_num, i)); \
-        if(1 == P.VU.vta && i > P.VU.vstart->read()) \
+        if(1 == P.VU.vta && i < (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5))) \
           P.VU.elt<type_sew_t<e64>::type>(rd_num, i, true) = ((type_sew_t<e64>::type)~0); \
         if(false == skip && i < vl) { \
           BODY32; \

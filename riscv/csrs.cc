@@ -902,7 +902,7 @@ bool medeleg_csr_t::unlogged_write(const reg_t val) noexcept {
   //   | (proc->extension_enabled('H') ? hypervisor_exceptions : 0)
   //   ;
   // TODO: for now we use the same mask as Xiangshan/NEMU to pass the test
-  const reg_t mask = 0xf3fbUL;
+  const reg_t mask = 0xb3ffUL;
   return basic_csr_t::unlogged_write((read() & ~mask) | (val & mask));
 }
 

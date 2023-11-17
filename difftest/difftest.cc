@@ -322,8 +322,7 @@ void difftest_init() {
   cfg_t cfg(/*default_initrd_bounds=*/std::make_pair((reg_t)0, (reg_t)0),
             /*default_bootargs=*/nullptr,
             /*default_isa=*/
-            "RV64IMAFDCV_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_"
-            "zksh_svinval",
+            "RV64IMAFDCV_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_zksh",
             /*default_priv=*/"MSU",
             /*default_varch=*/"vlen:128,elen:64,vstartalu:1",
             /*default_misaligned=*/false,

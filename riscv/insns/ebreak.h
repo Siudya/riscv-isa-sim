@@ -6,5 +6,5 @@ if (!STATE.debug_mode && (
         (STATE.v && STATE.prv == PRV_U && STATE.dcsr->ebreakvu))) {
 	throw trap_debug_mode();
 } else {
-	throw trap_breakpoint(STATE.v, pc);
+	throw trap_breakpoint(STATE.v, 0);
 }

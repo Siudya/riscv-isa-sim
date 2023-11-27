@@ -78,13 +78,13 @@ class mem_trap_t : public trap_t
 
 #define DECLARE_INST_TRAP(n, x) class trap_##x : public insn_trap_t { \
  public: \
-  trap_##x(reg_t tval) : insn_trap_t(n, /*gva*/false, tval) {} \
+  trap_##x(reg_t tval) : insn_trap_t(n, /*gva*/false, 0/*tval*/) {} \
   std::string name() { return "trap_"#x; } \
 };
 
 #define DECLARE_INST_WITH_GVA_TRAP(n, x) class trap_##x : public insn_trap_t {  \
  public: \
-  trap_##x(bool gva, reg_t tval) : insn_trap_t(n, gva, tval) {} \
+  trap_##x(bool gva, reg_t tval) : insn_trap_t(n, gva, 0/*tval*/) {} \
   std::string name() { return "trap_"#x; } \
 };
 

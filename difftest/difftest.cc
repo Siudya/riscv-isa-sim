@@ -260,7 +260,7 @@ void difftest_t::diff_display(size_t p) {
   }
   for (i = 0; i < 32; i++) {
     printf("%4s: " FMT_WORD " ", fpr_name[i],
-           f128_to_ui64_r_minMag(state->FPR[i], true));
+           unboxF64(state->FPR[i]));
     if (i % 4 == 3) {
       printf("\n");
     }

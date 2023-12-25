@@ -1,6 +1,6 @@
 // vfredsum: vd[0] =  sum( vs2[*] , vs1[0] )
 //RTL implement vfredusum.vs as vfredosum.vs instruction.
-#ifndef MPLENMENT_USUM_AS_OSUM
+#ifndef IMPLENMENT_USUM_AS_OSUM
 bool is_propagate = true;
 #else
 bool is_propagate = false;

@@ -23,7 +23,7 @@ LIB_DEPENDENCIES = libspike_main.a libriscv.a libdisasm.a libsoftfloat.a libfesv
 INC_LIBS  = $(addprefix $(REPO_PATH)/build/, $(LIB_DEPENDENCIES))
 SRCS = $(shell find . -name '*.cc') $(shell find . -name '*.h')
 SRCS += $(REPO_PATH)/spike_main/spike.cc
-CXXFLAGS = -O3 --std=c++17 -shared -fPIC -DNUM_CORES=$(NUM_CORES) -DMPLENMENT_USUM_AS_OSUM
+CXXFLAGS = -O3 --std=c++17 -shared -fPIC -DNUM_CORES=$(NUM_CORES) -DIMPLENMENT_USUM_AS_OSUM
 
 ifneq ($(CONFIG_USE_SPARSEMM),)
 CXXFLAGS += -DCONFIG_USE_SPARSEMM

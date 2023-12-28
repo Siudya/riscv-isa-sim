@@ -64,7 +64,6 @@ static void print_int128_hex(__int128 n) {
   const int mpos = i % 64;
 
 #define V_EXT_VSTART_CHECK do { if(P.VU.vstart->read() >= P.VU.vl->read()) { P.VU.vstart->write(0); return npc; } } while (0)
-#define V_EXT_VSTART_VL_CHECK do { if(P.VU.vstart->read() >= vl) { P.VU.vstart->write(0); return npc; } } while (0)
 
 //mata_action 0:origin, 1:calculate, 2:pad 1s
 #define VI_LOOP_ELEMENT_SKIP(BODY) \
@@ -76,6 +75,17 @@ static void print_int128_hex(__int128 n) {
     BODY; \
     skip = ((P.VU.elt<uint64_t>(0, midx) >> mpos) & 0x1) == 0; \
     if (skip && 0 == P.VU.vma && i<P.VU.vl->read()) { \
+        continue; \
+    } \
+  }
+
+//load/store specific
+#define VI_LOOP_ELEMENT_SKIP_LDST(BODY) \
+  VI_MASK_VARS \
+  if (insn.v_vm() == 0) { \
+    BODY; \
+    bool skip = ((P.VU.elt<uint64_t>(0, midx) >> mpos) & 0x1) == 0; \
+    if (skip) { \
         continue; \
     } \
   }
@@ -95,6 +105,16 @@ static void print_int128_hex(__int128 n) {
     continue; \
   } else { \
     VI_LOOP_ELEMENT_SKIP(); \
+  }
+
+//load/store specific
+#define VI_ELEMENT_SKIP_LDST \
+  if (i >= vl) { \
+    continue; \
+  } else if (i < P.VU.vstart->read()) { \
+    continue; \
+  } else { \
+    VI_LOOP_ELEMENT_SKIP_LDST(); \
   }
 
 #define VI_ELEMENT_SKIP_NO_VMA_CHECK \
@@ -1581,7 +1601,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   VI_LOOP_REDUCTION_END(sew2) \
   for (reg_t i = 1; i < (reg_t)(P.VU.VLEN/P.VU.vsew*(0.5)); ++i) { \
     if(1 == P.VU.vta) \
-      P.VU.elt<type_sew_t<sew2>::type>(rd_num, i, true) = vector_agnostic(P.VU.elt<type_sew_t<sew2>::type>(rd_num, i, false)); \
+		P.VU.elt<type_sew_t<sew2>::type>(rd_num, i, true) = vector_agnostic(P.VU.elt<type_sew_t<sew2>::type>(rd_num, i, false)); \
   }
 
 #define VI_VV_LOOP_WIDE_REDUCTION(BODY) \
@@ -1853,26 +1873,14 @@ reg_t index[P.VU.vlmax]; \
   const reg_t baseAddr = RS1; \
   const reg_t vd = insn.rd(); \
   VI_CHECK_LOAD(elt_width, is_mask_ldst); \
-  V_EXT_VSTART_VL_CHECK; \
-  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/veew)); ++i) { \
-    VI_LOOP_ELEMENT_SKIP(); \
-    if (0 == P.VU.vta && i >= vl) { \
-      continue; \
-    } \
-    if ((true == skip && 1 == P.VU.vma && i < vl) || (1 == P.VU.vta && i >= vl)) \
-      mata_action = 2; \
-    else \
-      mata_action = 1; \
+  for (reg_t i = 0; i < vl; ++i) { \
+    VI_ELEMENT_SKIP_LDST; \
     VI_STRIP(i); \
     P.VU.vstart->write(i); \
     for (reg_t fn = 0; fn < nf; ++fn) { \
-      if(1 == mata_action) { \
-        elt_width##_t val = MMU.load<elt_width##_t>( \
-          baseAddr + (stride) + (offset) * sizeof(elt_width##_t)); \
-        P.VU.elt<elt_width##_t>(vd + fn * emul, vreg_inx, true) = val; \
-      } \
-      else \
-        P.VU.elt<elt_width##_t>(vd + fn * emul, vreg_inx, true) = vector_agnostic(P.VU.elt<elt_width##_t>(vd + fn * emul, vreg_inx, false)); \
+      elt_width##_t val = MMU.load<elt_width##_t>( \
+        baseAddr + (stride) + (offset) * sizeof(elt_width##_t)); \
+      P.VU.elt<elt_width##_t>(vd + fn * emul, vreg_inx, true) = val; \
     } \
   } \
   P.VU.vstart->write(0);
@@ -1886,52 +1894,27 @@ reg_t index[P.VU.vlmax]; \
     require(nf == 1); \
   VI_CHECK_LD_INDEX(elt_width); \
   VI_DUPLICATE_VREG(insn.rs2(), elt_width); \
-  V_EXT_VSTART_VL_CHECK; \
-  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/P.VU.vsew)); ++i) { \
-    VI_LOOP_ELEMENT_SKIP(); \
-    if (0 == P.VU.vta && i >= vl) { \
-      continue; \
-    } \
-    if ((true == skip && 1 == P.VU.vma && i < vl) || (1 == P.VU.vta && i >= vl)) \
-      mata_action = 2; \
-    else \
-      mata_action = 1; \
-    \
+  for (reg_t i = 0; i < vl; ++i) { \
+    VI_ELEMENT_SKIP_LDST; \
     VI_STRIP(i); \
     P.VU.vstart->write(i); \
     for (reg_t fn = 0; fn < nf; ++fn) { \
       switch (P.VU.vsew) { \
         case e8: \
-          if(1 == mata_action) { \
-            P.VU.elt<uint8_t>(vd + fn * flmul, vreg_inx, true) = \
-              MMU.load<uint8_t>(baseAddr + index[i] + fn * 1); \
-          } \
-          else \
-            P.VU.elt<uint8_t>(vd + fn * flmul, vreg_inx, true) = vector_agnostic(P.VU.elt<uint8_t>(vd + fn * flmul, vreg_inx, false)); \
+          P.VU.elt<uint8_t>(vd + fn * flmul, vreg_inx, true) = \
+            MMU.load<uint8_t>(baseAddr + index[i] + fn * 1); \
           break; \
         case e16: \
-          if(1 == mata_action) { \
-            P.VU.elt<uint16_t>(vd + fn * flmul, vreg_inx, true) = \
-              MMU.load<uint16_t>(baseAddr + index[i] + fn * 2); \
-          } \
-          else \
-            P.VU.elt<uint16_t>(vd + fn * flmul, vreg_inx, true) = vector_agnostic(P.VU.elt<uint16_t>(vd + fn * flmul, vreg_inx, false)); \
+          P.VU.elt<uint16_t>(vd + fn * flmul, vreg_inx, true) = \
+            MMU.load<uint16_t>(baseAddr + index[i] + fn * 2); \
           break; \
         case e32: \
-          if(1 == mata_action) { \
-            P.VU.elt<uint32_t>(vd + fn * flmul, vreg_inx, true) = \
-              MMU.load<uint32_t>(baseAddr + index[i] + fn * 4); \
-          } \
-          else \
-            P.VU.elt<uint32_t>(vd + fn * flmul, vreg_inx, true) = vector_agnostic(P.VU.elt<uint32_t>(vd + fn * flmul, vreg_inx, false)); \
+          P.VU.elt<uint32_t>(vd + fn * flmul, vreg_inx, true) = \
+            MMU.load<uint32_t>(baseAddr + index[i] + fn * 4); \
           break; \
         default: \
-          if(1 == mata_action) { \
-            P.VU.elt<uint64_t>(vd + fn * flmul, vreg_inx, true) = \
-              MMU.load<uint64_t>(baseAddr + index[i] + fn * 8); \
-          } \
-          else \
-            P.VU.elt<uint64_t>(vd + fn * flmul, vreg_inx, true) = vector_agnostic(P.VU.elt<uint64_t>(vd + fn * flmul, vreg_inx, false)); \
+          P.VU.elt<uint64_t>(vd + fn * flmul, vreg_inx, true) = \
+            MMU.load<uint64_t>(baseAddr + index[i] + fn * 8); \
           break; \
       } \
     } \
@@ -1946,7 +1929,7 @@ reg_t index[P.VU.vlmax]; \
   VI_CHECK_STORE(elt_width, is_mask_ldst); \
   for (reg_t i = 0; i < vl; ++i) { \
     VI_STRIP(i) \
-    VI_ELEMENT_SKIP; \
+    VI_ELEMENT_SKIP_NO_VMA_CHECK; \
     P.VU.vstart->write(i); \
     for (reg_t fn = 0; fn < nf; ++fn) { \
       elt_width##_t val = P.VU.elt<elt_width##_t>(vs3 + fn * emul, vreg_inx); \
@@ -1967,7 +1950,7 @@ reg_t index[P.VU.vlmax]; \
   VI_DUPLICATE_VREG(insn.rs2(), elt_width); \
   for (reg_t i = 0; i < vl; ++i) { \
     VI_STRIP(i) \
-    VI_ELEMENT_SKIP; \
+    VI_ELEMENT_SKIP_NO_VMA_CHECK; \
     P.VU.vstart->write(i); \
     for (reg_t fn = 0; fn < nf; ++fn) { \
       switch (P.VU.vsew) { \
@@ -1999,36 +1982,24 @@ reg_t index[P.VU.vlmax]; \
   const reg_t rd_num = insn.rd(); \
   VI_CHECK_LOAD(elt_width, false); \
   bool early_stop = false; \
-  V_EXT_VSTART_VL_CHECK; \
-  for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, (reg_t)(P.VU.VLEN/veew)); ++i) { \
+  for (reg_t i = p->VU.vstart->read(); i < vl; ++i) { \
     VI_STRIP(i); \
-    VI_LOOP_ELEMENT_SKIP(); \
-    if (0 == P.VU.vta && i >= vl) { \
-      continue; \
-    } \
-    if ((true == skip && 1 == P.VU.vma && i < vl) || (1 == P.VU.vta && i >= vl)) \
-      mata_action = 2; \
-    else \
-      mata_action = 1; \
+    VI_ELEMENT_SKIP_LDST; \
     \
     for (reg_t fn = 0; fn < nf; ++fn) { \
       uint64_t val; \
-      if(1 == mata_action) { \
-        try { \
-          val = MMU.load<elt_width##_t>( \
-            baseAddr + (i * nf + fn) * sizeof(elt_width##_t)); \
-        } catch (trap_t& t) { \
-          if (i == 0) \
-            throw; /* Only take exception on zeroth element */ \
-          /* Reduce VL if an exception occurs on a later element */ \
-          early_stop = true; \
-          P.VU.vl->write_raw(i); \
-          break; \
-        } \
-        p->VU.elt<elt_width##_t>(rd_num + fn * emul, vreg_inx, true) = val; \
+      try { \
+        val = MMU.load<elt_width##_t>( \
+          baseAddr + (i * nf + fn) * sizeof(elt_width##_t)); \
+      } catch (trap_t& t) { \
+        if (i == 0) \
+          throw; /* Only take exception on zeroth element */ \
+        /* Reduce VL if an exception occurs on a later element */ \
+        early_stop = true; \
+        P.VU.vl->write_raw(i); \
+        break; \
       } \
-      else \
-        p->VU.elt<elt_width##_t>(rd_num + fn * emul, vreg_inx, true) = vector_agnostic(p->VU.elt<elt_width##_t>(rd_num + fn * emul, vreg_inx, false)); \
+      p->VU.elt<elt_width##_t>(rd_num + fn * emul, vreg_inx, true) = val; \
     } \
     \
     if (early_stop) { \

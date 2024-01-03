@@ -90,7 +90,7 @@ class mem_trap_t : public trap_t
 
 #define DECLARE_MEM_TRAP(n, x) class trap_##x : public mem_trap_t { \
  public: \
-  trap_##x(bool gva, reg_t tval, reg_t tval2, reg_t tinst) : mem_trap_t(n, gva, tval, tval2, tinst) {} \
+  trap_##x(bool gva, reg_t tval, reg_t tval2, reg_t tinst) : mem_trap_t(n, gva, (reg_t)((sreg_t)(tval<<25)>>25), (reg_t)((sreg_t)(tval2<<25)>>25), tinst) {} \
   std::string name() { return "trap_"#x; } \
 };
 

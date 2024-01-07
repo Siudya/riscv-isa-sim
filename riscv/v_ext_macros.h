@@ -872,6 +872,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
   reg_t rs2_num = insn.rs2(); \
   auto &vd_0_des = P.VU.elt<type_usew_t<x>::type>(rd_num, 0, true); \
   auto vd_0_res = P.VU.elt<type_usew_t<x>::type>(rs1_num, 0); \
+  V_EXT_VSTART_CHECK; \
   for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
     VI_LOOP_ELEMENT_SKIP_NO_VMA_CHECK(); \
     auto vs2 = P.VU.elt<type_usew_t<x>::type>(rs2_num, i);

@@ -437,17 +437,9 @@ void difftest_raise_intr(size_t p, uint64_t NO) {
   } else {
     state_t * state = diff->sim->get_core(p)->get_state();
     uint64_t mip_bit = 0x1UL << (NO & 0xf);
-    bool is_timer_interrupt = mip_bit & 0xa0UL;
-    bool is_external_interrupt = mip_bit & 0xb00UL;
-    bool from_outside = !(mip_bit & state->mip->read());
-    bool external_set = (is_timer_interrupt || is_external_interrupt) && from_outside;
-    if (external_set) {
-      state->mip->backdoor_write_with_mask(mip_bit, mip_bit);
-      difftest_exec(p, 1);
-      state->mip->backdoor_write_with_mask(mip_bit, ~mip_bit);
-    } else {
-      difftest_exec(p, 1);
-    }
+    state->mip->backdoor_write_with_mask(mip_bit, mip_bit);
+    difftest_exec(p, 1);
+    state->mip->backdoor_write_with_mask(mip_bit, ~mip_bit);
   }
 }
 

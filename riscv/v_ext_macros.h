@@ -792,6 +792,7 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 #define VI_VF_MERGE_LOOP(BODY) \
   VI_CHECK_SSS(false); \
   VI_VFP_COMMON \
+  V_EXT_VSTART_CHECK; \
   for (reg_t i = P.VU.vstart->read(); i < std::max(P.VU.vlmax, P.VU.VLEN/P.VU.vsew); ++i) { \
   VI_MERGE_VARS \
   if (0 == P.VU.vta && i >= vl) { \

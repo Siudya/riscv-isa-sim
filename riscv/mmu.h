@@ -74,7 +74,7 @@ private:
     if (!proc)
       return {addr, 0, false, {false, false, false}, type};
     bool virt = proc->state.v;
-    reg_t mode = proc->state.prv;
+    reg_t mode = (proc->state.satp->read() & (0xfL << 60)) == 0 ? 3 : proc->state.prv;
     if (type != FETCH) {
       if (in_mprv()) {
         mode = get_field(proc->state.mstatus->read(), MSTATUS_MPP);

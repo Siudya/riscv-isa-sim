@@ -296,6 +296,11 @@ void difftest_t::diff_display(size_t p) {
          " stvec: " FMT_WORD "\n",
          state->mtval->read(), state->stval->read(), state->mtvec->read(),
          state->stvec->read());
+  printf("vcsr: " FMT_WORD "\n", state->csrmap[CSR_VCSR]->read());
+  printf("vstart: " FMT_WORD " vxsat: " FMT_WORD " vxrm: " FMT_WORD "\n",
+         vu.vstart->read(), vu.vxsat->read(), vu.vxrm->read());
+  printf("vl: " FMT_WORD " vtype: " FMT_WORD " vlenb: " FMT_WORD "\n",
+         vu.vl->read(), vu.vtype->read(), vu.vlenb);
   printf("privilege mode:%ld\n", state->prv);
   fflush(stdout);
 }

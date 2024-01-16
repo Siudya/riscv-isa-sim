@@ -199,7 +199,7 @@ bool pmpaddr_csr_t::access_ok(access_type type, reg_t mode) const noexcept {
   const bool typex = type == FETCH;
   const bool typew = type == STORE;
   const bool normal_rwx = (typer && cfgr) || (typew && cfgw) || (typex && cfgx);
-  const bool mseccfg_mml = state->mseccfg->get_mml();
+  const bool mseccfg_mml = state->mseccfg->get_mml() & 0;
 
   if (mseccfg_mml) {
     if (cfgx && cfgw && cfgr && cfgl) {

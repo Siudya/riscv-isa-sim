@@ -61,7 +61,7 @@ std::string make_dts(size_t insns_per_rtc_tick, size_t cpu_hz,
          "      status = \"okay\";\n"
          "      compatible = \"riscv\";\n"
          "      riscv,isa = \"" << procs[i]->get_isa().get_isa_string() << "\";\n"
-         "      mmu-type = \"riscv," << (procs[i]->get_isa().get_max_xlen() <= 32 ? "sv32" : "sv57") << "\";\n"
+         "      mmu-type = \"riscv," << (procs[i]->get_isa().get_max_xlen() <= 32 ? "sv32" : "sv39") << "\";\n"
          "      riscv,pmpregions = <" << pmpregions << ">;\n"
          "      riscv,pmpgranularity = <" << pmpgranularity << ">;\n"
          "      clock-frequency = <" << cpu_hz << ">;\n"

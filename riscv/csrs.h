@@ -142,6 +142,60 @@ class pmpcfg_csr_t: public csr_t {
   virtual bool unlogged_write(const reg_t val) noexcept override;
 };
 
+class pmaaddr_csr_t: public csr_t {
+ public:
+  pmaaddr_csr_t(processor_t* const proc, const reg_t addr);
+  virtual void verify_permissions(insn_t insn, bool write) const override;
+  virtual reg_t read() const noexcept override;
+
+  // Does a 4-byte access at the specified address match this pma entry?
+  bool match4(reg_t addr) const noexcept;
+
+  // Does the specified range match only a proper subset of this page?
+  bool subset_match(reg_t addr, reg_t len) const noexcept;
+
+  // Is the specified access allowed given the pmacfg privileges?
+  bool access_ok(access_type type, reg_t mode) const noexcept;
+
+  // To check lock bit status from outside like mseccfg
+  bool is_locked() const noexcept {
+    return cfg & PMP_L;
+  }
+
+ protected:
+  virtual bool unlogged_write(const reg_t val) noexcept override;
+ private:
+  // Assuming this is configured as TOR, return address for top of
+  // range. Also forms bottom-of-range for next-highest pmaaddr
+  // register if that one is TOR.
+  reg_t tor_paddr() const noexcept;
+
+  // Assuming this is configured as TOR, return address for bottom of
+  // range. This is tor_paddr() from the previous pmaaddr register.
+  reg_t tor_base_paddr() const noexcept;
+
+  // Assuming this is configured as NAPOT or NA4, return mask for paddr.
+  // E.g. for 4KiB region, returns 0xffffffff_fffff000.
+  reg_t napot_mask() const noexcept;
+
+  bool next_locked_and_tor() const noexcept;
+  reg_t val;
+  friend class pmacfg_csr_t;  // so he can access cfg
+  uint8_t cfg;
+  const size_t pmaidx;
+};
+
+typedef std::shared_ptr<pmaaddr_csr_t> pmaaddr_csr_t_p;
+
+class pmacfg_csr_t: public csr_t {
+ public:
+  pmacfg_csr_t(processor_t* const proc, const reg_t addr);
+  virtual void verify_permissions(insn_t insn, bool write) const override;
+  virtual reg_t read() const noexcept override;
+ protected:
+  virtual bool unlogged_write(const reg_t val) noexcept override;
+};
+
 class mseccfg_csr_t: public basic_csr_t {
  public:
   mseccfg_csr_t(processor_t* const proc, const reg_t addr);

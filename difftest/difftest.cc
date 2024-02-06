@@ -315,7 +315,7 @@ void difftest_init() {
   //======  Constructing cfg ======//
 
   char mem_layout_str[100];
-  sprintf(mem_layout_str, "0x%x:0x%lx", DRAM_BASE, CONFIG_MSIZE);
+  sprintf(mem_layout_str, "0x%lx:0x%lx", DRAM_BASE, CONFIG_MSIZE);
 
   cfg_arg_t<size_t> nprocs(NUM_CORES);
   std::vector<size_t> default_hartids;

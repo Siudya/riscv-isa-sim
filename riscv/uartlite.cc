@@ -5,8 +5,8 @@
 #include "sim.h"
 #include "dts.h"
 
-#define UARTLITE_BASE_ADDR 0x40600000L
-#define UARTLITE_END_ADDR 0x40600010L
+#define UARTLITE_BASE_ADDR 0x37000000L
+#define UARTLITE_END_ADDR 0x37000010L
 #define CH_OFFSET 0
 #define UARTLITE_RX_FIFO  0x0
 #define UARTLITE_TX_FIFO  0x4

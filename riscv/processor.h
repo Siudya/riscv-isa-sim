@@ -149,8 +149,11 @@ struct state_t
 
   mseccfg_csr_t_p mseccfg;
 
-  static const int max_pmp = 64;
+  static const int max_pmp = 16;
   pmpaddr_csr_t_p pmpaddr[max_pmp];
+
+  static const int max_pma = 16;
+  pmaaddr_csr_t_p pmaaddr[max_pma];
 
   float_csr_t_p fflags;
   float_csr_t_p frm;

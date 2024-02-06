@@ -6,7 +6,7 @@
 #include "../riscv/devices.h"
 #include "../riscv/processor.h"
 
-#define CONFIG_MSIZE (8 * 1024 * 1024 * 1024UL)
+#define CONFIG_MSIZE (64 * 1024 * 1024 * 1024UL)
 
 #define XS_VLEN 128
 #define VENUM64 (XS_VLEN/64)

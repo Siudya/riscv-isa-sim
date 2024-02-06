@@ -436,6 +436,43 @@ void state_t::reset(processor_t* const proc, reg_t max_isa)
     csrmap[addr] = std::make_shared<pmpcfg_csr_t>(proc, addr);
   }
 
+  for (int i = 0; i < max_pma; ++i) {
+    csrmap[CSR_PMAADDR0 + i] = pmaaddr[i] = std::make_shared<pmaaddr_csr_t>(proc, CSR_PMAADDR0 + i);
+  }
+  for (int i = 0; i < max_pma; i += xlen / 8) {
+    reg_t addr = CSR_PMACFG0 + i / 4;
+    csrmap[addr] = std::make_shared<pmacfg_csr_t>(proc, addr);
+  }
+
+  csrmap[CSR_SBPCTL] = std::make_shared<basic_csr_t>(proc, CSR_SBPCTL, 0x7f);
+  csrmap[CSR_SPFCTL] = std::make_shared<basic_csr_t>(proc, CSR_SPFCTL, 0x17b37);
+  csrmap[CSR_SLVPREDCTL] = std::make_shared<basic_csr_t>(proc, CSR_SLVPREDCTL, 0x60);
+  csrmap[CSR_SMBLOCKCTL] = std::make_shared<basic_csr_t>(proc, CSR_SMBLOCKCTL, 0xf7);
+  csrmap[CSR_SRNCTL] = std::make_shared<basic_csr_t>(proc, CSR_SRNCTL, 0xb);
+  csrmap[CSR_SCACHE0] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE0, 0x0);
+  csrmap[CSR_SCACHE1] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE1, 0x0);
+  csrmap[CSR_SCACHE2] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE2, 0x0);
+  csrmap[CSR_SCACHE3] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE3, 0x0);
+  csrmap[CSR_SCACHE4] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE4, 0x0);
+  csrmap[CSR_SCACHE5] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE5, 0x0);
+  csrmap[CSR_SCACHE6] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE6, 0x0);
+  csrmap[CSR_SCACHE7] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE7, 0x0);
+  csrmap[CSR_SCACHE8] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE8, 0x0);
+  csrmap[CSR_SCACHE9] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE9, 0x0);
+  csrmap[CSR_SCACHE10] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE10, 0x0);
+  csrmap[CSR_SCACHE11] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE11, 0x0);
+  csrmap[CSR_SCACHE12] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE12, 0x0);
+  csrmap[CSR_SCACHE13] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE13, 0x0);
+  csrmap[CSR_SCACHE14] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE14, 0x0);
+  csrmap[CSR_SCACHE15] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE15, 0x0);
+  csrmap[CSR_SCACHE16] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE16, 0x0);
+  csrmap[CSR_SCACHE17] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE17, 0x0);
+  csrmap[CSR_SCACHE18] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE18, 0x0);
+  csrmap[CSR_SCACHE19] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE19, 0x0);
+  csrmap[CSR_SCACHE20] = std::make_shared<basic_csr_t>(proc, CSR_SCACHE20, 0x0);
+  csrmap[CSR_SDSID] = std::make_shared<basic_csr_t>(proc, CSR_SDSID, 0x0);
+  csrmap[CSR_SFETCHCTL] = std::make_shared<basic_csr_t>(proc, CSR_SFETCHCTL, 0x0);
+
   csrmap[CSR_FFLAGS] = fflags = std::make_shared<float_csr_t>(proc, CSR_FFLAGS, FSR_AEXC >> FSR_AEXC_SHIFT, 0);
   csrmap[CSR_FRM] = frm = std::make_shared<float_csr_t>(proc, CSR_FRM, FSR_RD >> FSR_RD_SHIFT, 0);
   assert(FSR_AEXC_SHIFT == 0);  // composite_csr_t assumes fflags begins at bit 0
@@ -443,7 +480,7 @@ void state_t::reset(processor_t* const proc, reg_t max_isa)
 
   csrmap[CSR_SEED] = std::make_shared<seed_csr_t>(proc, CSR_SEED);
 
-  csrmap[CSR_MARCHID] = std::make_shared<const_csr_t>(proc, CSR_MARCHID, 5);
+  csrmap[CSR_MARCHID] = std::make_shared<const_csr_t>(proc, CSR_MARCHID, 25);
   csrmap[CSR_MIMPID] = std::make_shared<const_csr_t>(proc, CSR_MIMPID, 0);
   csrmap[CSR_MVENDORID] = std::make_shared<const_csr_t>(proc, CSR_MVENDORID, 0);
   csrmap[CSR_MHARTID] = std::make_shared<const_csr_t>(proc, CSR_MHARTID, proc->get_id());
@@ -632,9 +669,28 @@ void processor_t::reset()
   if (n_pmp > 0) {
     // For backwards compatibility with software that is unaware of PMP,
     // initialize PMP to permit unprivileged access to all of memory.
-    put_csr(CSR_PMPADDR0, ~reg_t(0));
-    put_csr(CSR_PMPCFG0, PMP_R | PMP_W | PMP_X | PMP_NAPOT);
+    // put_csr(CSR_PMPADDR0, ~reg_t(0));
+    // put_csr(CSR_PMPCFG0, PMP_R | PMP_W | PMP_X | PMP_NAPOT);
   }
+  put_csr(CSR_PMAADDR0, reg_t(0x0));
+  put_csr(CSR_PMAADDR1, reg_t(0x0));
+  put_csr(CSR_PMAADDR2, reg_t(0x0));
+  put_csr(CSR_PMAADDR3, reg_t(0x8000));
+  put_csr(CSR_PMAADDR4, reg_t(0x10000));
+  put_csr(CSR_PMAADDR5, reg_t(0x20c00));
+  put_csr(CSR_PMAADDR6, reg_t(0x24000));
+  put_csr(CSR_PMAADDR7, reg_t(0x1024000));
+  put_csr(CSR_PMAADDR8, reg_t(0x1040400));
+  put_csr(CSR_PMAADDR9, reg_t(0x2004000));
+  put_csr(CSR_PMAADDR10, reg_t(0xdc00000));
+  put_csr(CSR_PMAADDR11, reg_t(0xe008000));
+  put_csr(CSR_PMAADDR12, reg_t(0xe008400));
+  put_csr(CSR_PMAADDR13, reg_t(0xe400000));
+  put_csr(CSR_PMAADDR14, reg_t(0x400000000));
+  put_csr(CSR_PMAADDR15, reg_t(0x3ffffffff));
+  put_csr(CSR_PMACFG0, reg_t(0x0f080b0d08000000));
+  put_csr(CSR_PMACFG1, reg_t(0x7f0b080f0b080b08));
+
 
   for (auto e : custom_extensions) // reset any extensions
     e.second->reset();

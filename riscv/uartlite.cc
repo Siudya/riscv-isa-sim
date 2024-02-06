@@ -45,7 +45,7 @@ std::string uartlite_generate_dts(const sim_t *sim) {
 }
 
 uartlite_t* uartlite_parse_from_fdt(const void *fdt, const sim_t *sim,
-                                          reg_t *base) {
+                                          reg_t *base, const std::vector<std::string>& sargs) {
   *base = UARTLITE_BASE_ADDR;
   return new uartlite_t();
 }

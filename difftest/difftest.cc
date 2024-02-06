@@ -324,19 +324,12 @@ void difftest_init() {
     default_hartids.push_back(i);
   }
 
-  cfg_t cfg(/*default_initrd_bounds=*/std::make_pair((reg_t)0, (reg_t)0),
-            /*default_bootargs=*/nullptr,
-            /*default_isa=*/
-            "rv64gcv_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_zksh_zicntr_zihpm",
-            /*default_priv=*/"MSU",
-            /*default_varch=*/"vlen:128,elen:64,vstartalu:1",
-            /*default_misaligned=*/false,
-            /*default_endianness*/ endianness_little,
-            /*default_pmpregions=*/16,
-            /*default_mem_layout=*/parse_mem_layout(mem_layout_str),
-            /*default_hartids=*/default_hartids,
-            /*default_real_time_clint=*/false,
-            /*default_trigger_count=*/4);
+  cfg_t cfg;
+  cfg.isa = "rv64gcv_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_zksh_zicntr_zihpm";
+  cfg.priv = "MSU";
+  cfg.varch = "vlen:128,elen:64,vstartalu:1";
+  cfg.mem_layout = parse_mem_layout(mem_layout_str);
+  cfg.hartids = default_hartids;
 
   //===== Constructing sim_t object =====//
 
@@ -353,7 +346,7 @@ void difftest_init() {
                                               .support_haltgroups = true,
                                               .support_impebreak = false};
 
-  std::vector<const device_factory_t*> plugin_device_factories;
+  std::vector<device_factory_t*> plugin_device_factories;
   // dummy_debug
   auto it = mmio_device_map().find(std::string("dummy_debug"));
   assert(it != mmio_device_map().end());
@@ -362,7 +355,7 @@ void difftest_init() {
   diff->sim = std::make_unique<sim_t>(
       /* *cfg=*/&cfg,
       /* halted=*/false,
-      /* mems=*/make_mems(cfg.mem_layout()),
+      /* mems=*/make_mems(cfg.mem_layout),
       /* plugin_devices=*/plugin_device_factories,
       /* args=*/difftest_htif_args,
       /* dm_config=*/difftest_dm_config,

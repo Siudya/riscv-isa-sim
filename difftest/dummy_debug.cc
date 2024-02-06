@@ -45,7 +45,7 @@ bool dummy_debug_t::store(reg_t addr, size_t len, const uint8_t* bytes)
 std::string dummy_debug_generate_dts(const sim_t *sim) { return ""; }
 
 dummy_debug_t *dummy_debug_parse_from_fdt(const void *fdt, const sim_t *sim,
-                                          reg_t *base) {
+                                          reg_t *base, const std::vector<std::string>& sargs) {
   *base = DM_BASE_ADDR;
   return new dummy_debug_t();
 }

@@ -15,6 +15,7 @@
 #define VENUM8  (XS_VLEN/8)
 
 #define CONFIG_RVV
+#define CONFIG_RV_FDI
 
 typedef uint64_t word_t;
 typedef int64_t sword_t;
@@ -102,6 +103,14 @@ struct diff_context_t {
   uint64_t sscratch;
   uint64_t mideleg;
   uint64_t medeleg;
+#ifdef CONFIG_RV_FDI
+  uint64_t dumcfg, dumbound0, dumbound1;
+  uint64_t dlcfg0;
+  uint64_t dlbound0, dlbound1, dlbound2, dlbound3;
+  uint64_t dlbound4, dlbound5, dlbound6, dlbound7;
+  uint64_t dmaincall, dretpc;
+  uint64_t djcfg, djbound0lo, djbound0hi;
+#endif
   uint64_t pc;
 #ifdef CONFIG_RVV
   //vector

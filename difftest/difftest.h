@@ -15,7 +15,7 @@
 #define VENUM8  (XS_VLEN/8)
 
 #define CONFIG_RVV
-#define CONFIG_RV_FDI
+// #define CONFIG_RV_FDI
 
 typedef uint64_t word_t;
 typedef int64_t sword_t;
@@ -72,12 +72,12 @@ using namespace spike_main;
 class difftest_t
 {
 public:
-  void diff_memcpy(size_t p, reg_t dest, void* src, size_t n);
-  void diff_set_regs(size_t p, void* diff_context, bool on_demand);
-  void diff_get_regs(size_t p, void* diff_context);
-  void diff_step(size_t p, uint64_t n);
-  void diff_debugmode(size_t p);
-  void diff_display(size_t p);
+  void diff_memcpy(reg_t dest, void* src, size_t n);
+  void diff_set_regs(void* diff_context, bool on_demand);
+  void diff_get_regs(void* diff_context);
+  void diff_step(uint64_t n);
+  void diff_debugmode();
+  void diff_display();
   void diff_mmio_store(reg_t addr, void *buf, size_t n);
   std::unique_ptr<sim_t> sim;
 };

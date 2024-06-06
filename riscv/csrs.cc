@@ -504,7 +504,9 @@ bool mstatus_csr_t::unlogged_write(const reg_t val) noexcept {
                    | (proc->extension_enabled('S') ? MSTATUS_TSR : 0)
                    | (has_page ? MSTATUS_TVM : 0)
                    | (has_gva ? MSTATUS_GVA : 0)
-                   | (has_mpv ? MSTATUS_MPV : 0);
+                   | (has_mpv ? MSTATUS_MPV : 0)
+                   | MSTATUS_MBE
+                   | (proc->extension_enabled_const('S') ? MSTATUS_SBE : 0);
 
   const reg_t requested_mpp = proc->legalize_privilege(get_field(val, MSTATUS_MPP));
   const reg_t adjusted_val = set_field(val, MSTATUS_MPP, requested_mpp);

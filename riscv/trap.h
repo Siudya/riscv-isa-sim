@@ -78,19 +78,19 @@ class mem_trap_t : public trap_t
 
 #define DECLARE_INST_TRAP(n, x) class trap_##x : public insn_trap_t { \
  public: \
-  trap_##x(reg_t tval) : insn_trap_t(n, /*gva*/false, 0/*tval*/) {} \
+  trap_##x(reg_t tval) : insn_trap_t(n, /*gva*/false, tval) {} \
   std::string name() { return "trap_"#x; } \
 };
 
 #define DECLARE_INST_WITH_GVA_TRAP(n, x) class trap_##x : public insn_trap_t {  \
  public: \
-  trap_##x(bool gva, reg_t tval) : insn_trap_t(n, gva, 0/*tval*/) {} \
+  trap_##x(bool gva, reg_t tval) : insn_trap_t(n, gva, tval) {} \
   std::string name() { return "trap_"#x; } \
 };
 
 #define DECLARE_MEM_TRAP(n, x) class trap_##x : public mem_trap_t { \
  public: \
-  trap_##x(bool gva, reg_t tval, reg_t tval2, reg_t tinst) : mem_trap_t(n, gva, (reg_t)((sreg_t)(tval<<25)>>25), (reg_t)((sreg_t)(tval2<<25)>>25), tinst) {} \
+  trap_##x(bool gva, reg_t tval, reg_t tval2, reg_t tinst) : mem_trap_t(n, gva, (reg_t)((sreg_t)(tval<<23)>>23), (reg_t)((sreg_t)(tval2<<23)>>23), tinst) {} \
   std::string name() { return "trap_"#x; } \
 };
 

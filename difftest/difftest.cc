@@ -364,6 +364,17 @@ void difftest_init() {
       /* socket_enable=*/false,
       /* *cmd_file=*/nullptr);
 
+  #define CONFIG_FLASH_SIZE 0x1000
+  #define CONFIG_FLASH_BASE 0x10000000
+  const uint32_t flash_init[] = {
+    0x0010029bUL, // CONFIG_FLASH_SIZE + 0: addiw t0, zero, 1
+    0x01f29293UL, // CONFIG_FLASH_SIZE + 4: slli  t0, t0, 0x1f
+    0x00028067UL, // CONFIG_FLASH_SIZE + 8: jr    t0
+  };
+  std::vector<char> rom_data((char*)flash_init, (char*)flash_init + sizeof(flash_init));
+  rom_data.resize(CONFIG_FLASH_SIZE, 0);
+  diff->sim->add_device(CONFIG_FLASH_BASE, std::shared_ptr<abstract_device_t>(new rom_device_t(rom_data)));
+
   // In case it is used for tracing multi-core, choose no buffering mode
   setvbuf(diff->sim->get_core(0)->get_log_file(), NULL, _IONBF, 0);
 

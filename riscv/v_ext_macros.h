@@ -988,18 +988,41 @@ static inline bool is_overlapped_widen(const int astart, int asize,
 #define VI_V_ULOOP(BODY) \
   VI_CHECK_SSS(false) \
   VI_LOOP_BASE(1) \
+  if (0 == P.VU.vta && i >= vl) { \
+    continue; \
+  } \
+  if ((true == skip && 1 == P.VU.vma && i < vl) || (1 == P.VU.vta && i >= vl)) \
+    mata_action = 2; \
+  else \
+    mata_action = 1; \
   if (sew == e8) { \
     V_U_PARAMS(e8); \
-    BODY; \
+    if (1 == mata_action) { \
+      BODY; \
+    } \
+    else \
+      vd=vector_agnostic(vd); \
   } else if (sew == e16) { \
     V_U_PARAMS(e16); \
-    BODY; \
+    if (1 == mata_action) { \
+      BODY; \
+    } \
+    else \
+      vd=vector_agnostic(vd); \
   } else if (sew == e32) { \
     V_U_PARAMS(e32); \
-    BODY; \
+    if (1 == mata_action) { \
+      BODY; \
+    } \
+    else \
+      vd=vector_agnostic(vd); \
   } else if (sew == e64) { \
     V_U_PARAMS(e64); \
-    BODY; \
+    if (1 == mata_action) { \
+      BODY; \
+    } \
+    else \
+      vd=vector_agnostic(vd); \
   } \
   VI_LOOP_END
 

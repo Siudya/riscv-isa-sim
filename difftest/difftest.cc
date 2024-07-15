@@ -324,7 +324,7 @@ void difftest_init() {
   }
 
   cfg_t cfg;
-  cfg.isa = "rv64gcvh_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_zksh_zicntr_zihpm";
+  cfg.isa = "rv64gcvh_zba_zbb_zbc_zbs_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_zksh_zicntr_zihpm_zvbb";
   cfg.priv = "MSU";
   cfg.varch = "vlen:128,elen:64,vstartalu:1";
   cfg.mem_layout = parse_mem_layout(mem_layout_str);

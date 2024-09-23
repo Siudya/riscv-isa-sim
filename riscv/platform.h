@@ -3,7 +3,10 @@
 #define _RISCV_PLATFORM_H
 
 #define DEFAULT_KERNEL_BOOTARGS "console=ttyS0 earlycon"
+
 #define DEFAULT_RSTVEC     0x00100000
+#define DEFAULT_ISA        "rv64imafdc_zicntr_zihpm"
+#define DEFAULT_PRIV       "MSU"
 #define CLINT_BASE         0x38000000
 #define CLINT_SIZE         0x000c0000
 #define PLIC_BASE          0x3c000000

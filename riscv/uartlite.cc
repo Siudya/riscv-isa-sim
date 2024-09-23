@@ -34,7 +34,7 @@ bool uartlite_t::store(reg_t addr, size_t len, const uint8_t* bytes) {
 }
 
 
-std::string uartlite_generate_dts(const sim_t *sim) {
+std::string uartlite_generate_dts(const sim_t *sim, const std::vector<std::string>& UNUSED sargs) {
   std::stringstream s;
   s << std::hex
     << "    SERIAL0: uartlite@" << UARTLITE_BASE_ADDR << " {\n"
